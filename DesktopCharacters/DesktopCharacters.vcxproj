@@ -123,10 +123,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CharactersManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Window\WindowsWindow.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CharactersManager.h" />
     <ClInclude Include="Window\WindowsWindow.h" />
     <ClInclude Include="Window\BaseWindow.h" />
   </ItemGroup>

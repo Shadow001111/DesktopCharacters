@@ -1,5 +1,6 @@
 #pragma once
 #include <windows.h>
+#include <memory>
 #include "BaseWindow.h"
 
 // WindowsWindow inherits from BaseWindow
@@ -13,9 +14,12 @@ public:
 
     int runLoop() override;
 
+    // Check if window is still valid
+    bool isValid() const;
+
 private:
-    // Window class name
-    const wchar_t* className;
+    // Unique window class name for each instance
+    std::unique_ptr<wchar_t[]> uniqueClassName;
 
     // Handle to the window
     HWND hwnd;

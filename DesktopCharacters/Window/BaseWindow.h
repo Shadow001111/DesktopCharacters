@@ -18,9 +18,9 @@ class BaseWindow
 public:
     virtual ~BaseWindow() = default;
 
-    // Method to create the window
     virtual bool createWindow(const WindowParams& params) = 0;
 
-    // Method to run the message loop
     virtual int runLoop() = 0;
+
+    virtual bool isValid() const = 0;
 };

@@ -2,11 +2,19 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <memory>
 
 // Constructor
 WindowsWindow::WindowsWindow()
-    : className(L"MyWindowClass"), hwnd(nullptr), hInstance(GetModuleHandle(nullptr))
+    : hwnd(nullptr), hInstance(GetModuleHandle(nullptr))
 {
+    // Generate unique class name using the object's address
+    static int classCounter = 0;
+    classCounter++;
+
+    // Create unique class name
+    uniqueClassName = std::make_unique<wchar_t[]>(50);
+    swprintf_s(uniqueClassName.get(), 50, L"MyWindowClass_%d_%p", classCounter, this);
 }
 
 // Destructor
@@ -17,6 +25,12 @@ WindowsWindow::~WindowsWindow()
     {
         DestroyWindow(hwnd);
     }
+
+    // Unregister the unique window class
+    if (uniqueClassName)
+    {
+        UnregisterClass(uniqueClassName.get(), hInstance);
+    }
 }
 
 // Create window
@@ -24,45 +38,46 @@ bool WindowsWindow::createWindow(const WindowParams& params)
 {
     windowParams = params;
 
-    // Fill WNDCLASS
+    // Fill WNDCLASS with unique class name
     WNDCLASS wc = {};
     wc.lpfnWndProc = WindowsWindow::windowProc;
     wc.hInstance = hInstance;
-    wc.lpszClassName = className;
+    wc.lpszClassName = uniqueClassName.get();
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wc.hbrBackground = CreateSolidBrush(RGB(255, 0, 0));
+    wc.hbrBackground = CreateSolidBrush(RGB(255, 0, 0)); // Red background
 
     if (!RegisterClass(&wc))
     {
+        DWORD error = GetLastError();
+        std::cout << "RegisterClass failed with error: " << error << std::endl;
         return false;
     }
 
-    // Base style
-    DWORD style = WS_OVERLAPPEDWINDOW;
-
-    if (params.frameless)
-    {
-        style = WS_POPUP;
-    }
+    // Base style - start with popup for frameless, otherwise overlapped window
+    DWORD style = params.frameless ? WS_POPUP : WS_OVERLAPPEDWINDOW;
 
     // Extended styles
     DWORD exStyle = 0;
 
+    // Apply topMost parameter
     if (params.topMost)
     {
         exStyle |= WS_EX_TOPMOST;
     }
+
+    // Apply ignoreMouse parameter (make window transparent to mouse)
     if (params.ignoreMouse)
     {
         exStyle |= WS_EX_TRANSPARENT;
     }
 
-    // Adjust for fullscreen
+    // Window position and size
     int winX = CW_USEDEFAULT;
     int winY = CW_USEDEFAULT;
     int winW = params.width;
     int winH = params.height;
 
+    // Adjust for fullscreen
     if (params.fullscreen)
     {
         winX = 0;
@@ -75,7 +90,7 @@ bool WindowsWindow::createWindow(const WindowParams& params)
     // Create window
     hwnd = CreateWindowEx(
         exStyle,
-        className,
+        uniqueClassName.get(),
         params.title,
         style,
         winX, winY, winW, winH,
@@ -84,7 +99,15 @@ bool WindowsWindow::createWindow(const WindowParams& params)
 
     if (!hwnd)
     {
+        DWORD error = GetLastError();
+        std::cout << "CreateWindowEx failed with error: " << error << std::endl;
         return false;
+    }
+
+    // For topMost windows, we can also use SetWindowPos as an alternative/reinforcement
+    if (params.topMost)
+    {
+        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
     }
 
     ShowWindow(hwnd, SW_SHOW);
@@ -138,9 +161,16 @@ LRESULT WindowsWindow::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
     switch (msg)
     {
     case WM_DESTROY:
-        PostQuitMessage(0); // Post quit message
+        // Mark window as invalid by setting hwnd to null
+        hwnd = nullptr;
         return 0;
     default:
         return DefWindowProc(hwnd, msg, wParam, lParam);
     }
+}
+
+// Check if window is still valid
+bool WindowsWindow::isValid() const
+{
+    return hwnd != nullptr && IsWindow(hwnd);
 }

@@ -1,7 +1,9 @@
 #include "Window/WindowsWindow.h"
+#include "CharactersManager.h"
 
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 void openConsole()
 {
@@ -23,24 +25,27 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     openConsole();
 #endif
 
-    // Create instance of WindowsWindow
-    WindowsWindow window;
-    
-    WindowParams params;
-    params.width = 80;
-    params.height = 60;
-    params.title = L"(-_-)";
-    params.topMost = true;
-    params.frameless = true;
-    //params.fullscreen = true;
-    //params.ignoreMouse = true;
+    // Create the characters manager
+    CharactersManager manager;
 
-    // Create a window 800x600 with title
-    if (!window.createWindow(params))
+    // Create multiple characters with the same parameters
+    if (!manager.addCharacter())
     {
         return -1;
     }
 
-    // Run the message loop
-    return window.runLoop();
+    if (!manager.addCharacter())
+    {
+        return -1;
+    }
+
+    if (!manager.addCharacter())
+    {
+        return -1;
+    }
+
+    // Run the message loop - manager will handle all windows
+    int result = manager.runLoop();
+
+    return result;
 }
