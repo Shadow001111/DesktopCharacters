@@ -30,6 +30,7 @@ bool WindowsWindow::createWindow(const WindowParams& params)
     wc.hInstance = hInstance;
     wc.lpszClassName = className;
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wc.hbrBackground = CreateSolidBrush(RGB(255, 0, 0));
 
     if (!RegisterClass(&wc))
     {
@@ -39,14 +40,37 @@ bool WindowsWindow::createWindow(const WindowParams& params)
     // Base style
     DWORD style = WS_OVERLAPPEDWINDOW;
 
+    if (params.frameless)
+    {
+        style = WS_POPUP;
+    }
+
     // Extended styles
     DWORD exStyle = 0;
+
+    if (params.topMost)
+    {
+        exStyle |= WS_EX_TOPMOST;
+    }
+    if (params.ignoreMouse)
+    {
+        exStyle |= WS_EX_TRANSPARENT;
+    }
 
     // Adjust for fullscreen
     int winX = CW_USEDEFAULT;
     int winY = CW_USEDEFAULT;
     int winW = params.width;
     int winH = params.height;
+
+    if (params.fullscreen)
+    {
+        winX = 0;
+        winY = 0;
+        winW = GetSystemMetrics(SM_CXSCREEN);
+        winH = GetSystemMetrics(SM_CYSCREEN);
+        style = WS_POPUP; // Fullscreen should always be popup style
+    }
 
     // Create window
     hwnd = CreateWindowEx(

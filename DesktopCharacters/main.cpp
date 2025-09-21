@@ -27,11 +27,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     WindowsWindow window;
     
     WindowParams params;
-    params.width = 800;
-    params.height = 600;
+    params.width = 80;
+    params.height = 60;
     params.title = L"(-_-)";
-    //params.topMost = true;
-    //params.frameless = true;
+    params.topMost = true;
+    params.frameless = true;
     //params.fullscreen = true;
     //params.ignoreMouse = true;
 
