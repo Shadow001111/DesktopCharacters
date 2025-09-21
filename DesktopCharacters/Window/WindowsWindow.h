@@ -9,10 +9,8 @@ public:
     WindowsWindow();
     ~WindowsWindow();
 
-    // Override createWindow from BaseWindow
-    bool createWindow(int width, int height, const wchar_t* title) override;
+    bool createWindow(const WindowParams& params) override;
 
-    // Override runLoop from BaseWindow
     int runLoop() override;
 
 private:
@@ -24,6 +22,9 @@ private:
 
     // Handle to the application instance
     HINSTANCE hInstance;
+
+    // Store parameters for reference
+    WindowParams windowParams;
 
     // Static window procedure callback
     static LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

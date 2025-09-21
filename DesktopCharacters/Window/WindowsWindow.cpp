@@ -1,5 +1,7 @@
 #include "WindowsWindow.h"
+
 #include <stdexcept>
+#include <iostream>
 
 // Constructor
 WindowsWindow::WindowsWindow()
@@ -18,29 +20,42 @@ WindowsWindow::~WindowsWindow()
 }
 
 // Create window
-bool WindowsWindow::createWindow(int width, int height, const wchar_t* title)
+bool WindowsWindow::createWindow(const WindowParams& params)
 {
-    // Fill WNDCLASS structure
-    WNDCLASS wc = {};
-    wc.lpfnWndProc = WindowsWindow::windowProc; // Set static callback
-    wc.hInstance = hInstance;                 // Current instance handle
-    wc.lpszClassName = className;                 // Window class name
-    wc.hCursor = LoadCursor(nullptr, IDC_ARROW); // Default arrow cursor
+    windowParams = params;
 
-    // Register window class
+    // Fill WNDCLASS
+    WNDCLASS wc = {};
+    wc.lpfnWndProc = WindowsWindow::windowProc;
+    wc.hInstance = hInstance;
+    wc.lpszClassName = className;
+    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+
     if (!RegisterClass(&wc))
     {
         return false;
     }
 
-    // Create the actual window
+    // Base style
+    DWORD style = WS_OVERLAPPEDWINDOW;
+
+    // Extended styles
+    DWORD exStyle = 0;
+
+    // Adjust for fullscreen
+    int winX = CW_USEDEFAULT;
+    int winY = CW_USEDEFAULT;
+    int winW = params.width;
+    int winH = params.height;
+
+    // Create window
     hwnd = CreateWindowEx(
-        0,                 // No extended styles
-        className,         // Window class name
-        title,             // Window title
-        WS_OVERLAPPEDWINDOW, // Window style
-        CW_USEDEFAULT, CW_USEDEFAULT, width, height, // Position and size
-        nullptr, nullptr, hInstance, this // Pass this pointer as lParam
+        exStyle,
+        className,
+        params.title,
+        style,
+        winX, winY, winW, winH,
+        nullptr, nullptr, hInstance, this
     );
 
     if (!hwnd)
@@ -48,7 +63,6 @@ bool WindowsWindow::createWindow(int width, int height, const wchar_t* title)
         return false;
     }
 
-    // Show and update the window
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
