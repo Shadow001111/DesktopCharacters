@@ -172,3 +172,13 @@ bool WindowsWindow::isValid() const
 {
     return hwnd != nullptr && IsWindow(hwnd);
 }
+
+HWND WindowsWindow::getHWND() const
+{
+    return hwnd;
+}
+
+void WindowsWindow::setCharacter(Character* char_ptr)
+{
+    character = char_ptr;
+}

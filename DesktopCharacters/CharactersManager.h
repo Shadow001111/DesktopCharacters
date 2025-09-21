@@ -24,7 +24,6 @@ public:
 
     // Run the main message loop for all characters
     int runLoop();
-
 private:
     std::vector<std::unique_ptr<Character>> characters;
     bool shouldExit;

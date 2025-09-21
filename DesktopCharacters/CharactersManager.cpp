@@ -25,7 +25,7 @@ bool CharactersManager::addCharacter()
     params.height = 300;
     params.title = L"Character";
     params.topMost = true;
-    //params.frameless = true;
+    params.frameless = true;
 
     if (!character->create(params))
     {

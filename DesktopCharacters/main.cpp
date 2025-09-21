@@ -34,16 +34,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         return -1;
     }
 
-    if (!manager.addCharacter())
-    {
-        return -1;
-    }
-
-    if (!manager.addCharacter())
-    {
-        return -1;
-    }
-
     // Run the message loop - manager will handle all windows
     int result = manager.runLoop();
 

@@ -8,7 +8,7 @@ using WindowClass = WindowsWindow;
 
 // Constructor
 Character::Character()
-    : x(0), y(0), width(400), height(300), alive(false)
+    : position(), size(), velocity(), alive(false)
 {
 }
 
@@ -36,89 +36,81 @@ bool Character::create(const WindowParams& params)
         return false;
     }
 
-    // Set character properties from window parameters
-    x = 0; // Windows will position automatically if CW_USEDEFAULT
-    y = 0;
-    width = params.width;
-    height = params.height;
-    alive = true;
+    // Set character properties
+    position = {};
+    size = { params.width, params.height };
+    velocity = {};
 
-    std::cout << "Character created at (" << x << "," << y << ") size " << width << "x" << height << std::endl;
+    alive = true;
     return true;
 }
 
-// Set character position
-void Character::setPosition(int newX, int newY)
+void Character::setPosition(float x, float y)
 {
-    if (!alive || !window) return;
-
-    x = newX;
-    y = newY;
-
-    // Move the actual window
-    WindowClass* winWindow = static_cast<WindowClass*>(window.get());
-    if (winWindow && winWindow->isValid())
-    {
-        HWND hwnd = winWindow->getHWND();
-        if (hwnd)
-        {
-            SetWindowPos(hwnd, nullptr, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
-            std::cout << "Character moved to (" << x << "," << y << ")" << std::endl;
-        }
-    }
+    setPosition(Vec2(x, y));
 }
 
-// Set character size
-void Character::setSize(int newWidth, int newHeight)
+void Character::setPosition(const Vec2& newPosition)
 {
-    if (!alive || !window) return;
-
-    width = newWidth;
-    height = newHeight;
-
-    // Resize the actual window
-    WindowClass* winWindow = static_cast<WindowClass*>(window.get());
-    if (winWindow && winWindow->isValid())
-    {
-        HWND hwnd = winWindow->getHWND();
-        if (hwnd)
-        {
-            SetWindowPos(hwnd, nullptr, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER);
-            std::cout << "Character resized to " << width << "x" << height << std::endl;
-        }
-    }
+    if (!alive) return;
+    position = newPosition;
+    updateWindowTransform();
 }
 
-// Move character by delta
-void Character::move(int deltaX, int deltaY)
+void Character::setSize(float width, float height)
 {
-    setPosition(x + deltaX, y + deltaY);
+    setSize(Vec2(width, height));
 }
 
-// Resize character
-void Character::resize(int newWidth, int newHeight)
+void Character::setSize(const Vec2& newSize)
 {
-    setSize(newWidth, newHeight);
+    if (!alive) return;
+    size = newSize;
+    updateWindowTransform();
 }
 
-int Character::getX() const
+void Character::setVelocity(float vx, float vy)
 {
-    return x;
+    setVelocity(Vec2(vx, vy));
 }
 
-int Character::getY() const
+void Character::setVelocity(const Vec2& newVelocity)
 {
-    return y;
+    velocity = newVelocity;
 }
 
-int Character::getWidth() const
+void Character::move(float deltaX, float deltaY)
 {
-    return width;
+    move(Vec2(deltaX, deltaY));
 }
 
-int Character::getHeight() const
+void Character::move(const Vec2& delta)
 {
-    return height;
+    setPosition(position + delta);
+}
+
+const Vec2& Character::getPosition()
+{
+    return position;
+}
+
+const Vec2& Character::getSize()
+{
+    return size;
+}
+
+const Vec2& Character::getVelocity()
+{
+    return velocity;
+}
+
+void Character::update(float deltaTime)
+{
+    if (!alive || !window || dragging) return;
+
+    position += velocity * deltaTime;
+
+    updateWindowTransform();
 }
 
 // Check if character is alive
@@ -145,4 +137,57 @@ void Character::destroy()
 BaseWindow* Character::getWindow() const
 {
     return window.get();
+}
+
+void Character::startDrag(const Vec2& mousePos)
+{
+    if (!alive) return;
+
+    dragging = true;
+    dragOffset = position - mousePos;
+    std::cout << "Started dragging character" << std::endl;
+}
+
+void Character::updateDrag(const Vec2& mousePos)
+{
+    if (!alive || !dragging) return;
+
+    setPosition(mousePos + dragOffset);
+}
+
+void Character::endDrag()
+{
+    if (!alive) return;
+
+    dragging = false;
+    std::cout << "Stopped dragging character" << std::endl;
+}
+
+bool Character::isDragging() const
+{
+    return dragging;
+}
+
+void Character::updateWindowTransform()
+{
+    if (!alive || !window) return;
+
+    // TODO: Move code below to WindowClass
+
+    WindowClass* winWindow = static_cast<WindowClass*>(window.get());
+    if (winWindow && winWindow->isValid())
+    {
+        HWND hwnd = winWindow->getHWND();
+        if (hwnd)
+        {
+            // Convert world space to screen space (for now, 1:1 mapping)
+            int screenX = position.intX();
+            int screenY = position.intY();
+            int screenW = size.intX();
+            int screenH = size.intY();
+
+            SetWindowPos(hwnd, nullptr, screenX, screenY, screenW, screenH,
+                SWP_NOZORDER | SWP_NOACTIVATE);
+        }
+    }
 }
