@@ -6,15 +6,23 @@
 #include <memory>
 #include <vector>
 
+#include "PlatformInterface//WindowsPlatformInterface.h"
+using PlatformInterface = WindowsPlatformInterface;
+
 // Character represents a desktop character entity
 class Character
 {
 public:
+    static PlatformInterface* platform;
+
+    static Vec2 worldSize; // Center is at zero
+    static Vec2 screenSize;
+
     Character();
     ~Character();
 
     // Create the character with a window
-    bool create(const WindowParams& params);
+    bool create(const Vec2& position, const Vec2& size);
 
     void onWindowEvent(const WindowEvent& evt);
 
@@ -73,4 +81,6 @@ private:
 
     // Update the actual window position/size from world space
     void updateWindowTransform();
+    Vec2 screenToWorld(const Vec2& screen) const;
+    Vec2 worldToScreen(const Vec2& world) const;
 };

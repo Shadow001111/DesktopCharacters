@@ -27,15 +27,15 @@ public:
     bool operator==(const Vec2& other) const;
     bool operator!=(const Vec2& other) const;
 
+    // Component-wise scale
+    Vec2 scaled(const Vec2& other) const;
+    Vec2 scaledInv(const Vec2& other) const;
+
     // Utility methods
     float length() const;
     float lengthSquared() const;
     Vec2 normalized() const;
     void normalize();
-
-    // Convert to int for screen coordinates
-    int intX() const;
-    int intY() const;
 
     // Static utility methods
     static float distance(const Vec2& a, const Vec2& b);

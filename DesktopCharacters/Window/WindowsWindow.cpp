@@ -132,37 +132,6 @@ bool WindowsWindow::isValid() const
     return hwnd != nullptr && IsWindow(hwnd);
 }
 
-void WindowsWindow::getGlobalMousePosition(int& x, int& y) const
-{
-    POINT pt;
-    if (GetCursorPos(&pt))
-    {
-        x = pt.x;
-        y = pt.y;
-        return;
-    }
-    x = 0;
-    y = 0;
-}
-
-bool WindowsWindow::getMouseButtonPressed(MouseButton button) const
-{
-    int vkCode = 0;
-    switch (button)
-    {
-        case MouseButton::Left:
-            vkCode = VK_LBUTTON;
-            break;
-        case MouseButton::Right:
-            vkCode = VK_RBUTTON;
-            break;
-        case MouseButton::Middle:
-            vkCode = VK_MBUTTON;
-            break;
-    }
-    return (GetAsyncKeyState(vkCode) & 0x8000) != 0;
-}
-
 HWND WindowsWindow::getHWND() const
 {
     return hwnd;
@@ -216,21 +185,18 @@ LRESULT WindowsWindow::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_LBUTTONDOWN:
             evt.type = WindowEventType::MouseDown;
-            getGlobalMousePosition(evt.globalMouseX, evt.globalMouseY);
             evt.localMouseX = GET_X_LPARAM(lParam);
             evt.localMouseY = GET_Y_LPARAM(lParam);
             break;
 
         case WM_LBUTTONUP:
             evt.type = WindowEventType::MouseUp;
-            getGlobalMousePosition(evt.globalMouseX, evt.globalMouseY);
             evt.localMouseX = GET_X_LPARAM(lParam);
             evt.localMouseY = GET_Y_LPARAM(lParam);
             break;
 
         case WM_MOUSEMOVE:
             evt.type = WindowEventType::MouseMove;
-            getGlobalMousePosition(evt.globalMouseX, evt.globalMouseY);
             evt.localMouseX = GET_X_LPARAM(lParam);
             evt.localMouseY = GET_Y_LPARAM(lParam);
             break;

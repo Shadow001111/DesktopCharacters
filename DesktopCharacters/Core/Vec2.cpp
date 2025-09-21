@@ -75,6 +75,16 @@ bool Vec2::operator!=(const Vec2& other) const
     return !(*this == other);
 }
 
+Vec2 Vec2::scaled(const Vec2& other) const
+{
+    return Vec2(x * other.x, y * other.y);
+}
+
+Vec2 Vec2::scaledInv(const Vec2& other) const
+{
+    return Vec2(x / other.x, y / other.y);
+}
+
 // Utility methods
 float Vec2::length() const
 {
@@ -95,17 +105,6 @@ Vec2 Vec2::normalized() const
 void Vec2::normalize()
 {
     *this = normalized();
-}
-
-// Convert to int for screen coordinates
-int Vec2::intX() const
-{
-    return static_cast<int>(std::round(x));
-}
-
-int Vec2::intY() const
-{
-    return static_cast<int>(std::round(y));
 }
 
 // Static utility methods

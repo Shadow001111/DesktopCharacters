@@ -18,9 +18,6 @@ public:
     int runLoop() override;
     bool isValid() const;
 
-    void getGlobalMousePosition(int& x, int& y) const override;
-    bool getMouseButtonPressed(MouseButton button) const override;
-
     HWND getHWND() const;
 private:
     // Unique window class name for each instance

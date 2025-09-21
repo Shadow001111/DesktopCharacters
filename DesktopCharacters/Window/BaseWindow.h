@@ -20,9 +20,6 @@ struct WindowEvent
     WindowEventType type = WindowEventType::None;
 
     // Position info
-    int globalMouseX = 0;
-    int globalMouseY = 0;
-
     int localMouseX = 0;
     int localMouseY = 0;
 
@@ -45,13 +42,6 @@ struct WindowParams
     bool ignoreMouse = false;          // Do not receive mouse clicks or drags
 };
 
-enum class MouseButton
-{
-    Left,
-    Right,
-    Middle
-};
-
 // Base class containing only pure virtual methods
 class BaseWindow
 {
@@ -63,9 +53,6 @@ public:
     virtual bool createWindow(const WindowParams& params) = 0;
     virtual int runLoop() = 0;
     virtual bool isValid() const = 0;
-
-    virtual void getGlobalMousePosition(int& x, int& y) const = 0;
-    virtual bool getMouseButtonPressed(MouseButton button) const = 0;
 
     void setCallback(EventCallback cb);
 protected:

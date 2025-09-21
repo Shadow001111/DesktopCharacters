@@ -6,7 +6,14 @@
 // Constructor
 CharactersManager::CharactersManager() : shouldExit(false)
 {
-    
+    static PlatformInterface platform;
+
+    int scrW, scrH;
+    platform.getScreenResolution(scrW, scrH);
+
+    Character::platform = &platform;
+    Character::worldSize = Vec2((float)scrW / (float)scrH, 1.0f) * 10.0f;
+    Character::screenSize = Vec2(scrW, scrH);
 }
 
 // Destructor - automatically closes all characters
@@ -20,14 +27,10 @@ bool CharactersManager::addCharacter()
 {
     auto character = std::make_unique<Character>();
 
-    WindowParams params;
-    params.width = 200;
-    params.height = 300;
-    params.title = L"Character";
-    params.topMost = true;
-    params.frameless = true;
+    Vec2 position;
+    Vec2 size(1.0f, 1.0f);
 
-    if (!character->create(params))
+    if (!character->create(position, size))
     {
         std::cout << "Failed to create character!" << std::endl;
         return false;

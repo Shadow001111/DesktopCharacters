@@ -1,10 +1,14 @@
 #include "Character.h"
 
 #include "Window/WindowsWindow.h"
+using WindowClass = WindowsWindow;
 
 #include <iostream>
 
-using WindowClass = WindowsWindow;
+PlatformInterface* Character::platform = nullptr;
+Vec2 Character::worldSize;   // The logical world size for physics
+Vec2 Character::screenSize;
+
 
 Character::Character()
     : position(), size(), velocity(), alive(false)
@@ -16,7 +20,7 @@ Character::~Character()
     destroy();
 }
 
-bool Character::create(const WindowParams& params)
+bool Character::create(const Vec2& position, const Vec2& size)
 {
     if (window != nullptr)
     {
@@ -24,7 +28,14 @@ bool Character::create(const WindowParams& params)
         return false;
     }
 
-    // Create the window with provided parameters
+    // Create the window
+    WindowParams params;
+    params.width = 200; // TODO: Update size
+    params.height = 300;
+    params.title = L"Character";
+    params.topMost = true;
+    params.frameless = true;
+
     window = std::make_unique<WindowClass>();
     if (!window->createWindow(params))
     {
@@ -39,8 +50,8 @@ bool Character::create(const WindowParams& params)
         });
 
     // Set character properties
-    position = {};
-    size = { params.width, params.height };
+    this->position = position;
+    this->size = size;
     velocity = {};
 
     alive = true;
@@ -52,7 +63,9 @@ void Character::onWindowEvent(const WindowEvent& evt)
     switch (evt.type)
     {
     case WindowEventType::MouseDown:
-        startDrag(Vec2(evt.globalMouseX, evt.globalMouseY));
+        int x, y;
+        platform->getGlobalMousePosition(x, y);
+        startDrag(Vec2(x, y));
         break;
 
     case WindowEventType::MouseUp:
@@ -136,12 +149,12 @@ void Character::update(float deltaTime)
     // Dragging
     if (dragging)
     {
-        if (window->getMouseButtonPressed(MouseButton::Left))
+        if (platform->getMouseButtonPressed(MouseButton::Left))
         {
             velocity = Vec2();
 
             int mouseX, mouseY;
-            window->getGlobalMousePosition(mouseX, mouseY);
+            platform->getGlobalMousePosition(mouseX, mouseY);
 
             Vec2 mousePos(mouseX, mouseY);
 
@@ -274,4 +287,14 @@ void Character::updateWindowTransform()
                 SWP_NOZORDER | SWP_NOACTIVATE);
         }
     }
+}
+
+Vec2 Character::screenToWorld(const Vec2& screen) const
+{
+    return Vec2();
+}
+
+Vec2 Character::worldToScreen(const Vec2& world) const
+{
+    return Vec2();
 }
