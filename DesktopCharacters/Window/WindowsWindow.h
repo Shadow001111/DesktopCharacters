@@ -17,6 +17,9 @@ public:
     // Check if window is still valid
     bool isValid() const;
 
+    // Get window handle for character manipulation
+    HWND getHWND() const { return hwnd; }
+
 private:
     // Unique window class name for each instance
     std::unique_ptr<wchar_t[]> uniqueClassName;
@@ -26,9 +29,6 @@ private:
 
     // Handle to the application instance
     HINSTANCE hInstance;
-
-    // Store parameters for reference
-    WindowParams windowParams;
 
     // Static window procedure callback
     static LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

@@ -1,6 +1,6 @@
 #pragma once
-#include "Window/WindowsWindow.h"
 
+#include "Character.h"
 #include <vector>
 #include <memory>
 
@@ -10,17 +10,14 @@ public:
     CharactersManager();
     ~CharactersManager();
 
-    // Set default parameters for all new characters
-    void setDefaultParams(const WindowParams& params);
-
-    // Add a new character window (creates it internally)
+    // Add a new character (creates it internally)
     bool addCharacter();
 
     // Close all characters
     void closeAllCharacters();
 
-    // Remove closed/invalid characters
-    void removeClosedCharacters();
+    // Remove dead characters
+    void removeDeadCharacters();
 
     // Get the number of characters
     size_t getCharacterCount() const;
@@ -29,8 +26,7 @@ public:
     int runLoop();
 
 private:
-    std::vector<std::unique_ptr<BaseWindow>> characters;
-    WindowParams defaultParams;
+    std::vector<std::unique_ptr<Character>> characters;
     bool shouldExit;
 
     // Check for exit key combination

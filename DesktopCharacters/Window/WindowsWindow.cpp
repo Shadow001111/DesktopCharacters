@@ -36,8 +36,6 @@ WindowsWindow::~WindowsWindow()
 // Create window
 bool WindowsWindow::createWindow(const WindowParams& params)
 {
-    windowParams = params;
-
     // Fill WNDCLASS with unique class name
     WNDCLASS wc = {};
     wc.lpfnWndProc = WindowsWindow::windowProc;

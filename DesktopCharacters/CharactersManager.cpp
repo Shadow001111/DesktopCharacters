@@ -1,5 +1,4 @@
 #include "CharactersManager.h"
-
 #include <iostream>
 #include <windows.h>
 #include <algorithm>
@@ -7,14 +6,7 @@
 // Constructor
 CharactersManager::CharactersManager() : shouldExit(false)
 {
-    // Set default parameters
-    defaultParams.width = 400;
-    defaultParams.height = 300;
-    defaultParams.title = L"Character";
-    defaultParams.topMost = true;
-    defaultParams.frameless = true;
-    defaultParams.fullscreen = false;
-    defaultParams.ignoreMouse = false;
+    
 }
 
 // Destructor - automatically closes all characters
@@ -23,18 +15,19 @@ CharactersManager::~CharactersManager()
     closeAllCharacters();
 }
 
-// Set default parameters for all new characters
-void CharactersManager::setDefaultParams(const WindowParams& params)
-{
-    defaultParams = params;
-}
-
-// Add a new character window (creates it internally)
+// Add a new character (creates it internally)
 bool CharactersManager::addCharacter()
 {
-    auto character = std::make_unique<WindowsWindow>();
+    auto character = std::make_unique<Character>();
 
-    if (!character->createWindow(defaultParams))
+    WindowParams params;
+    params.width = 200;
+    params.height = 300;
+    params.title = L"Character";
+    params.topMost = true;
+    //params.frameless = true;
+
+    if (!character->create(params))
     {
         std::cout << "Failed to create character!" << std::endl;
         return false;
@@ -48,24 +41,26 @@ bool CharactersManager::addCharacter()
 // Close all characters
 void CharactersManager::closeAllCharacters()
 {
-    characters.clear(); // This will call destructors of all windows
+    characters.clear(); // This will call destructors of all characters
 }
 
-// Remove closed/invalid characters
-void CharactersManager::removeClosedCharacters()
+// Remove dead characters
+void CharactersManager::removeDeadCharacters()
 {
     auto it = std::remove_if(characters.begin(), characters.end(),
-        [](const std::unique_ptr<BaseWindow>& character) {
-            // Cast to WindowsWindow to check validity
-            WindowsWindow* winChar = static_cast<WindowsWindow*>(character.get());
-            return !winChar->isValid();
+        [](const std::unique_ptr<Character>& character) {
+            return !character->isAlive();
         });
 
     if (it != characters.end())
     {
         size_t removedCount = std::distance(it, characters.end());
         characters.erase(it, characters.end());
-        std::cout << "Removed " << removedCount << " closed character(s). Remaining: " << characters.size() << std::endl;
+        std::cout << "Removed " << removedCount << " dead character(s). Remaining: " << characters.size() << std::endl;
+        if (characters.empty())
+        {
+            shouldExit = true;
+        }
     }
 }
 
@@ -112,8 +107,8 @@ int CharactersManager::runLoop()
             break;
         }
 
-        // Remove any closed characters
-        removeClosedCharacters();
+        // Remove any dead characters
+        removeDeadCharacters();
 
         // Small delay to prevent excessive CPU usage
         Sleep(10);
