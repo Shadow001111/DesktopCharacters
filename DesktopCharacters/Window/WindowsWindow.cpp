@@ -126,6 +126,48 @@ int WindowsWindow::runLoop()
     return static_cast<int>(msg.wParam);
 }
 
+//
+bool WindowsWindow::isValid() const
+{
+    return hwnd != nullptr && IsWindow(hwnd);
+}
+
+void WindowsWindow::getGlobalMousePosition(int& x, int& y) const
+{
+    POINT pt;
+    if (GetCursorPos(&pt))
+    {
+        x = pt.x;
+        y = pt.y;
+        return;
+    }
+    x = 0;
+    y = 0;
+}
+
+bool WindowsWindow::getMouseButtonPressed(MouseButton button) const
+{
+    int vkCode = 0;
+    switch (button)
+    {
+        case MouseButton::Left:
+            vkCode = VK_LBUTTON;
+            break;
+        case MouseButton::Right:
+            vkCode = VK_RBUTTON;
+            break;
+        case MouseButton::Middle:
+            vkCode = VK_MBUTTON;
+            break;
+    }
+    return (GetAsyncKeyState(vkCode) & 0x8000) != 0;
+}
+
+HWND WindowsWindow::getHWND() const
+{
+    return hwnd;
+}
+
 // Static window procedure
 LRESULT CALLBACK WindowsWindow::windowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -156,29 +198,57 @@ LRESULT CALLBACK WindowsWindow::windowProc(HWND hwnd, UINT msg, WPARAM wParam, L
 // Instance method handling messages
 LRESULT WindowsWindow::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    switch (msg)
+    if (callback)
     {
-    case WM_DESTROY:
-        // Mark window as invalid by setting hwnd to null
-        hwnd = nullptr;
-        return 0;
-    default:
-        return DefWindowProc(hwnd, msg, wParam, lParam);
+        WindowEvent evt;
+
+        switch (msg)
+        {
+        case WM_CLOSE:
+            evt.type = WindowEventType::Close;
+            break;
+
+        case WM_SIZE:
+            evt.type = WindowEventType::Resize;
+            evt.width = LOWORD(lParam);
+            evt.height = HIWORD(lParam);
+            break;
+
+        case WM_LBUTTONDOWN:
+            evt.type = WindowEventType::MouseDown;
+            getGlobalMousePosition(evt.globalMouseX, evt.globalMouseY);
+            evt.localMouseX = GET_X_LPARAM(lParam);
+            evt.localMouseY = GET_Y_LPARAM(lParam);
+            break;
+
+        case WM_LBUTTONUP:
+            evt.type = WindowEventType::MouseUp;
+            getGlobalMousePosition(evt.globalMouseX, evt.globalMouseY);
+            evt.localMouseX = GET_X_LPARAM(lParam);
+            evt.localMouseY = GET_Y_LPARAM(lParam);
+            break;
+
+        case WM_MOUSEMOVE:
+            evt.type = WindowEventType::MouseMove;
+            getGlobalMousePosition(evt.globalMouseX, evt.globalMouseY);
+            evt.localMouseX = GET_X_LPARAM(lParam);
+            evt.localMouseY = GET_Y_LPARAM(lParam);
+            break;
+
+        case WM_KEYDOWN:
+            evt.type = WindowEventType::KeyDown;
+            evt.keyCode = static_cast<int>(wParam);
+            break;
+
+        case WM_KEYUP:
+            evt.type = WindowEventType::KeyUp;
+            evt.keyCode = static_cast<int>(wParam);
+            break;
+        }
+
+        if (evt.type != WindowEventType::None)
+            callback(evt);
     }
-}
 
-// Check if window is still valid
-bool WindowsWindow::isValid() const
-{
-    return hwnd != nullptr && IsWindow(hwnd);
-}
-
-HWND WindowsWindow::getHWND() const
-{
-    return hwnd;
-}
-
-void WindowsWindow::setCharacter(Character* char_ptr)
-{
-    character = char_ptr;
+    return DefWindowProc(hwnd, msg, wParam, lParam);
 }

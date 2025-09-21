@@ -6,19 +6,16 @@
 
 using WindowClass = WindowsWindow;
 
-// Constructor
 Character::Character()
     : position(), size(), velocity(), alive(false)
 {
 }
 
-// Destructor
 Character::~Character()
 {
     destroy();
 }
 
-// Create the character with a window
 bool Character::create(const WindowParams& params)
 {
     if (window != nullptr)
@@ -36,6 +33,11 @@ bool Character::create(const WindowParams& params)
         return false;
     }
 
+    // Hook Character’s callback
+    window->setCallback([this](const WindowEvent& evt) {
+        this->onWindowEvent(evt);
+        });
+
     // Set character properties
     position = {};
     size = { params.width, params.height };
@@ -43,6 +45,30 @@ bool Character::create(const WindowParams& params)
 
     alive = true;
     return true;
+}
+
+void Character::onWindowEvent(const WindowEvent& evt)
+{
+    switch (evt.type)
+    {
+    case WindowEventType::MouseDown:
+        startDrag(Vec2(evt.globalMouseX, evt.globalMouseY));
+        break;
+
+    case WindowEventType::MouseUp:
+        break;
+
+    case WindowEventType::Resize:
+        setSize(static_cast<float>(evt.width), static_cast<float>(evt.height));
+        break;
+
+    case WindowEventType::Close:
+        destroy();
+        break;
+
+    default:
+        break;
+    }
 }
 
 void Character::setPosition(float x, float y)
@@ -54,7 +80,6 @@ void Character::setPosition(const Vec2& newPosition)
 {
     if (!alive) return;
     position = newPosition;
-    updateWindowTransform();
 }
 
 void Character::setSize(float width, float height)
@@ -106,14 +131,87 @@ const Vec2& Character::getVelocity()
 
 void Character::update(float deltaTime)
 {
-    if (!alive || !window || dragging) return;
+    if (!alive || !window) return;
 
-    position += velocity * deltaTime;
+    // Dragging
+    if (dragging)
+    {
+        if (window->getMouseButtonPressed(MouseButton::Left))
+        {
+            velocity = Vec2();
+
+            int mouseX, mouseY;
+            window->getGlobalMousePosition(mouseX, mouseY);
+
+            Vec2 mousePos(mouseX, mouseY);
+
+            position = mousePos + dragOffset;
+
+            // Record history
+            dragHistory.push_back({ position, deltaTime });
+            float totalTime = 0.0f;
+            for (int i = (int)dragHistory.size() - 1; i >= 0; --i)
+            {
+                totalTime += dragHistory[i].time;
+                if (totalTime > dragHistoryDuration)
+                {
+                    dragHistory.erase(dragHistory.begin(), dragHistory.begin() + i);
+                    break;
+                }
+            }
+        }
+        else
+        {
+            dragging = false;
+
+            if (!dragHistory.empty())
+            {
+                Vec2 deltaPos = dragHistory.back().position - dragHistory.front().position;
+                float totalTime = 0.0f;
+                for (auto& s : dragHistory) totalTime += s.time;
+
+                if (totalTime > 0.0f)
+                    velocity = deltaPos / totalTime;
+            }
+            dragHistory.clear();
+        }
+    }
+    
+    // Kinematics
+    if (!dragging)
+    {
+        Vec2 gravity(0.0f, 5000.0f);
+
+        velocity += gravity * deltaTime;
+
+        position += velocity * deltaTime;
+
+        if (position.x < 0.0f)
+        {
+            position.x = 0;
+            velocity.x *= -0.9f;
+        }
+        else if (position.x > 1920.0f - size.x)
+        {
+            position.x = 1920.0f - size.x;
+            velocity.x *= -0.9f;
+        }
+
+        if (position.y < 0.0f)
+        {
+            position.y = 0;
+            velocity.y *= -0.9f;
+        }
+        else if (position.y > 1080.0f - size.y)
+        {
+            position.y = 1080.0f - size.y;
+            velocity.y *= -0.9f;
+        }
+    }
 
     updateWindowTransform();
 }
 
-// Check if character is alive
 bool Character::isAlive() const
 {
     if (!alive || !window) return false;
@@ -123,7 +221,6 @@ bool Character::isAlive() const
     return winWindow && winWindow->isValid();
 }
 
-// Destroy the character
 void Character::destroy()
 {
     if (window)
@@ -145,22 +242,9 @@ void Character::startDrag(const Vec2& mousePos)
 
     dragging = true;
     dragOffset = position - mousePos;
-    std::cout << "Started dragging character" << std::endl;
-}
 
-void Character::updateDrag(const Vec2& mousePos)
-{
-    if (!alive || !dragging) return;
-
-    setPosition(mousePos + dragOffset);
-}
-
-void Character::endDrag()
-{
-    if (!alive) return;
-
-    dragging = false;
-    std::cout << "Stopped dragging character" << std::endl;
+    dragHistory.clear();
+    dragHistory.push_back({ position, 0.0f });
 }
 
 bool Character::isDragging() const

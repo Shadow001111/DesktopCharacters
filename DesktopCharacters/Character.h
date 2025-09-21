@@ -4,6 +4,7 @@
 #include "Core/Vec2.h"
 
 #include <memory>
+#include <vector>
 
 // Character represents a desktop character entity
 class Character
@@ -14,6 +15,8 @@ public:
 
     // Create the character with a window
     bool create(const WindowParams& params);
+
+    void onWindowEvent(const WindowEvent& evt);
 
     // Character properties
     void setPosition(float x, float y);
@@ -45,8 +48,6 @@ public:
 
     // Drag functionality
     void startDrag(const Vec2& mousePos);
-    void updateDrag(const Vec2& mousePos);
-    void endDrag();
     bool isDragging() const;
 private:
     std::unique_ptr<BaseWindow> window;
@@ -62,6 +63,13 @@ private:
     // Drag state
     bool dragging;
     Vec2 dragOffset; // Offset from mouse to character position when drag started
+    struct DragSample
+    {
+        Vec2 position;
+        float time; // in seconds
+    };
+    std::vector<DragSample> dragHistory;
+    float dragHistoryDuration = 0.1f; // track last 0.1 seconds for velocity
 
     // Update the actual window position/size from world space
     void updateWindowTransform();

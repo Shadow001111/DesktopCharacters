@@ -127,6 +127,7 @@
     <ClCompile Include="CharactersManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Core\Vec2.cpp" />
+    <ClCompile Include="Window\BaseWindow.cpp" />
     <ClCompile Include="Window\WindowsWindow.cpp" />
   </ItemGroup>
   <ItemGroup>

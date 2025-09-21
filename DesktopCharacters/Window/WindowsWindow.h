@@ -3,12 +3,9 @@
 #include <windowsx.h> // For GET_X_LPARAM, GET_Y_LPARAM
 
 #include <memory>
+#include <functional>
 
 #include "BaseWindow.h"
-#include "Vec2.h"
-
-// Forward declaration to avoid circular include
-class Character;
 
 // WindowsWindow inherits from BaseWindow
 class WindowsWindow : public BaseWindow
@@ -18,17 +15,13 @@ public:
     ~WindowsWindow();
 
     bool createWindow(const WindowParams& params) override;
-
     int runLoop() override;
-
-    // Check if window is still valid
     bool isValid() const;
 
-    // Get window handle for character manipulation
-    HWND getHWND() const;
+    void getGlobalMousePosition(int& x, int& y) const override;
+    bool getMouseButtonPressed(MouseButton button) const override;
 
-    // Set character reference for drag handling
-    void setCharacter(Character* char_ptr);
+    HWND getHWND() const;
 private:
     // Unique window class name for each instance
     std::unique_ptr<wchar_t[]> uniqueClassName;
@@ -38,9 +31,6 @@ private:
 
     // Handle to the application instance
     HINSTANCE hInstance;
-
-    // Reference to character for drag handling
-    Character* character;
 
     // Static window procedure callback
     static LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

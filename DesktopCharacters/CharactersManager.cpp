@@ -64,6 +64,17 @@ void CharactersManager::removeDeadCharacters()
     }
 }
 
+void CharactersManager::updateCharacters(float deltaTime)
+{
+    for (auto& character : characters)
+    {
+        if (character->isAlive())
+        {
+            character->update(deltaTime);
+        }
+    }
+}
+
 // Get the number of characters
 size_t CharactersManager::getCharacterCount() const
 {
@@ -88,10 +99,18 @@ int CharactersManager::runLoop()
     }
 
     std::cout << "Program is running. Press Ctrl+Shift+Q to exit." << std::endl;
+    std::cout << "Click and drag characters to move them around!" << std::endl;
 
     MSG msg;
+    DWORD lastTime = GetTickCount();
+
     while (!shouldExit)
     {
+        // Calculate delta time
+        DWORD currentTime = GetTickCount();
+        float deltaTime = (currentTime - lastTime) / 1000.0f; // Convert to seconds
+        lastTime = currentTime;
+
         // Check for messages
         while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
         {
@@ -107,11 +126,14 @@ int CharactersManager::runLoop()
             break;
         }
 
+        // Update all characters
+        updateCharacters(deltaTime);
+
         // Remove any dead characters
         removeDeadCharacters();
 
         // Small delay to prevent excessive CPU usage
-        Sleep(10);
+        Sleep(8); // ~120 FPS
     }
 
     return 0;

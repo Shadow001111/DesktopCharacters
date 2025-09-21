@@ -30,6 +30,9 @@
     <ClCompile Include="Core\Vec2.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="Window\BaseWindow.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window\BaseWindow.h">

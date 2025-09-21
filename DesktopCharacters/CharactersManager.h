@@ -10,19 +10,16 @@ public:
     CharactersManager();
     ~CharactersManager();
 
-    // Add a new character (creates it internally)
     bool addCharacter();
 
-    // Close all characters
     void closeAllCharacters();
 
-    // Remove dead characters
     void removeDeadCharacters();
 
-    // Get the number of characters
+    void updateCharacters(float deltaTime);
+
     size_t getCharacterCount() const;
 
-    // Run the main message loop for all characters
     int runLoop();
 private:
     std::vector<std::unique_ptr<Character>> characters;
