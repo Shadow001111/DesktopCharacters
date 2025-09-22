@@ -1,7 +1,10 @@
 #include "CharactersManager.h"
-#include <iostream>
+
 #include <windows.h>
+
+#include <iostream>
 #include <algorithm>
+#include <sstream>
 
 // Constructor
 CharactersManager::CharactersManager() : shouldExit(false)
@@ -12,7 +15,7 @@ CharactersManager::CharactersManager() : shouldExit(false)
     platform.getScreenResolution(scrW, scrH);
 
     Character::platform = &platform;
-    Character::worldSize = Vec2((float)scrW / (float)scrH, 1.0f) * 10.0f;
+    Character::worldSize = Vec2((float)scrW / (float)scrH, 1.0f) * 5.0f;
     Character::screenSize = Vec2(scrW, scrH);
 }
 
@@ -69,6 +72,9 @@ void CharactersManager::removeDeadCharacters()
 
 void CharactersManager::updateCharacters(float deltaTime)
 {
+    Character::windowsData.clear();
+    Character::platform->getWindowsDataForCharacters(Character::windowsData);
+
     for (auto& character : characters)
     {
         if (character->isAlive())
@@ -105,12 +111,12 @@ int CharactersManager::runLoop()
     std::cout << "Click and drag characters to move them around!" << std::endl;
 
     MSG msg;
-    DWORD lastTime = GetTickCount();
+    DWORD lastTime = GetTickCount64();
 
     while (!shouldExit)
     {
         // Calculate delta time
-        DWORD currentTime = GetTickCount();
+        DWORD currentTime = GetTickCount64();
         float deltaTime = (currentTime - lastTime) / 1000.0f; // Convert to seconds
         lastTime = currentTime;
 

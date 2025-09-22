@@ -5,6 +5,9 @@
 #include <fstream>
 #include <memory>
 
+#include <locale>
+#include <codecvt>
+
 void openConsole()
 {
     // Create a new console
@@ -23,6 +26,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
 #ifdef _DEBUG
     openConsole();
+    //SetConsoleOutputCP(CP_UTF8);
+    std::wcout.imbue(std::locale("Russian"));
 #endif
 
     // Create the characters manager

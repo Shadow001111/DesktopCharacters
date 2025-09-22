@@ -14,22 +14,28 @@ public:
     // Arithmetic operators
     Vec2 operator+(const Vec2& other) const;
     Vec2 operator-(const Vec2& other) const;
+    Vec2 operator*(const Vec2& other) const;
+    Vec2 operator/(const Vec2& other) const;
+
+    Vec2 operator+(float scalar) const;
+    Vec2 operator-(float scalar) const;
     Vec2 operator*(float scalar) const;
     Vec2 operator/(float scalar) const;
 
     // Assignment operators
     Vec2& operator+=(const Vec2& other);
     Vec2& operator-=(const Vec2& other);
+    Vec2& operator*=(const Vec2& other);
+    Vec2& operator/=(const Vec2& other);
+
+    Vec2& operator+=(float scalar);
+    Vec2& operator-=(float scalar);
     Vec2& operator*=(float scalar);
     Vec2& operator/=(float scalar);
 
     // Comparison operators
     bool operator==(const Vec2& other) const;
     bool operator!=(const Vec2& other) const;
-
-    // Component-wise scale
-    Vec2 scaled(const Vec2& other) const;
-    Vec2 scaledInv(const Vec2& other) const;
 
     // Utility methods
     float length() const;

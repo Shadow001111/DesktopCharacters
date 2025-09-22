@@ -14,9 +14,11 @@ public:
     WindowsWindow();
     ~WindowsWindow();
 
-    bool createWindow(const WindowParams& params) override;
+    bool createWindow(const InitWindowParams& params) override;
     int runLoop() override;
     bool isValid() const;
+
+    bool setPositionAndSize(int x, int y, int w, int h) override;
 
     HWND getHWND() const;
 private:

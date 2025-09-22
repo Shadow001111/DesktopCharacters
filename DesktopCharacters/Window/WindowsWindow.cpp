@@ -34,7 +34,7 @@ WindowsWindow::~WindowsWindow()
 }
 
 // Create window
-bool WindowsWindow::createWindow(const WindowParams& params)
+bool WindowsWindow::createWindow(const InitWindowParams& params)
 {
     // Fill WNDCLASS with unique class name
     WNDCLASS wc = {};
@@ -130,6 +130,12 @@ int WindowsWindow::runLoop()
 bool WindowsWindow::isValid() const
 {
     return hwnd != nullptr && IsWindow(hwnd);
+}
+
+bool WindowsWindow::setPositionAndSize(int x, int y, int w, int h)
+{
+    return SetWindowPos(hwnd, nullptr, x, y, w, h,
+        SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
 HWND WindowsWindow::getHWND() const

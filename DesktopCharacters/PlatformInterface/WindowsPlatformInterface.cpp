@@ -1,5 +1,89 @@
 #include "WindowsPlatformInterface.h"
+
 #include <windows.h>
+#include <unordered_set>
+
+#include <iostream>
+
+struct WindowsWindowData
+{
+    HWND hwnd;
+    std::wstring title;
+    std::wstring className;
+    RECT rect;
+    int zOrder;
+};
+
+const std::unordered_set<std::wstring> BANNED_CLASS_NAMES =
+{
+    
+};
+
+static std::vector<WindowsWindowData> globalTempWindowsWindowsData;
+static int g_orderCounter = 0;
+
+BOOL CALLBACK EnumWindowsCallback(HWND hwnd, LPARAM lParam)
+{
+    // Check visibility
+    if (!IsWindowVisible(hwnd))
+        return TRUE;
+
+    // Skip minimized windows
+    if (IsIconic(hwnd))
+        return TRUE;
+
+    // Skip child windows (only top-level windows)
+    if (GetParent(hwnd))
+        return TRUE;
+
+    // Skip owned windows (tool/dialogs usually)
+    if (GetWindow(hwnd, GW_OWNER))
+        return TRUE;
+
+    // Check extended window styles
+    LONG exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+    if (exStyle & WS_EX_TOOLWINDOW)
+        return TRUE;
+
+    // Get window rect
+    RECT rect;
+    if (!GetWindowRect(hwnd, &rect))
+        return TRUE;
+
+    int width = rect.right - rect.left;
+    int height = rect.bottom - rect.top;
+
+    if (width == 0 || height == 0)
+        return TRUE;
+
+    // Get title
+    wchar_t title[512];
+    GetWindowTextW(hwnd, title, 512);
+    std::wstring wtitle = title;
+    if (wtitle.empty())
+        return TRUE;
+
+    // Get class name
+    wchar_t className[256];
+    GetClassNameW(hwnd, className, 256);
+    std::wstring wclassName = className;
+
+    if (BANNED_CLASS_NAMES.find(wclassName) != BANNED_CLASS_NAMES.end())
+        return TRUE;
+
+    // Construct WindowData
+    WindowsWindowData wd;
+    wd.hwnd = hwnd;
+    wd.title = wtitle;
+    wd.className = wclassName;
+    wd.rect = rect;
+    wd.zOrder = g_orderCounter++;
+
+    globalTempWindowsWindowsData.push_back(wd);
+
+    return TRUE;
+}
+
 
 bool WindowsPlatformInterface::getMouseButtonPressed(MouseButton button) const
 {
@@ -36,4 +120,25 @@ void WindowsPlatformInterface::getScreenResolution(int& w, int& h) const
 {
     w = GetSystemMetrics(SM_CXSCREEN);
     h = GetSystemMetrics(SM_CYSCREEN);
+}
+
+void WindowsPlatformInterface::getWindowsDataForCharacters(std::vector<WindowData>& result) const
+{
+    globalTempWindowsWindowsData.clear();
+    g_orderCounter = 0;
+    EnumWindows(EnumWindowsCallback, 0);
+
+    result.reserve(result.size() + globalTempWindowsWindowsData.size());
+    for (const auto& wd : globalTempWindowsWindowsData)
+    {
+        WindowData data;
+        data.title = wd.title;
+        data.className = wd.className;
+        data.x = wd.rect.left;
+        data.y = wd.rect.top;
+        data.w = wd.rect.right - wd.rect.left;
+        data.h = wd.rect.bottom - wd.rect.top;
+        data.zOrder = wd.zOrder;
+        result.push_back(data);
+    }
 }

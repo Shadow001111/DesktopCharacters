@@ -14,6 +14,7 @@ class Character
 {
 public:
     static PlatformInterface* platform;
+    static std::vector<WindowData> windowsData;
 
     static Vec2 worldSize; // Center is at zero
     static Vec2 screenSize;
@@ -80,7 +81,7 @@ private:
     float dragHistoryDuration = 0.1f; // track last 0.1 seconds for velocity
 
     // Update the actual window position/size from world space
-    void updateWindowTransform();
+    void updateWindowTransform() const;
     Vec2 screenToWorld(const Vec2& screen) const;
     Vec2 worldToScreen(const Vec2& world) const;
 };

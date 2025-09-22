@@ -31,7 +31,7 @@ struct WindowEvent
     int height = 0;
 };
 
-struct WindowParams
+struct InitWindowParams
 {
     int width;                 // Width of the window
     int height;                // Height of the window
@@ -50,8 +50,10 @@ public:
 
     virtual ~BaseWindow() = default;
 
-    virtual bool createWindow(const WindowParams& params) = 0;
+    virtual bool createWindow(const InitWindowParams& params) = 0;
     virtual int runLoop() = 0;
+    virtual bool setPositionAndSize(int x, int y, int w, int h) = 0;
+
     virtual bool isValid() const = 0;
 
     void setCallback(EventCallback cb);
