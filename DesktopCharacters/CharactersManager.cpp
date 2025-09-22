@@ -1,7 +1,5 @@
 #include "CharactersManager.h"
 
-#include <windows.h>
-
 #include <iostream>
 #include <algorithm>
 #include <sstream>
@@ -9,14 +7,6 @@
 // Constructor
 CharactersManager::CharactersManager() : shouldExit(false)
 {
-    static PlatformInterface platform;
-
-    int scrW, scrH;
-    platform.getScreenResolution(scrW, scrH);
-
-    Character::platform = &platform;
-    Character::worldSize = Vec2((float)scrW / (float)scrH, 1.0f) * 5.0f;
-    Character::screenSize = Vec2(scrW, scrH);
 }
 
 // Destructor - automatically closes all characters
@@ -25,22 +15,48 @@ CharactersManager::~CharactersManager()
     closeAllCharacters();
 }
 
-// Add a new character (creates it internally)
-bool CharactersManager::addCharacter()
+bool CharactersManager::initialize()
 {
-    auto character = std::make_unique<Character>();
+    // Platform
+    platformInterface = std::make_unique<PlatformInterfaceClass>();
 
-    Vec2 position;
-    Vec2 size(1.0f, 1.0f);
+    int scrW, scrH;
+    platformInterface->getScreenResolution(scrW, scrH);
+    screenSize = Vec2(scrW, scrH);
 
-    if (!character->create(position, size))
+    Character::worldSize = Vec2((float)scrW / (float)scrH, 1.0f) * 5.0f;
+
+    // Main window
+    InitWindowParams params;
+    params.width = 0;
+    params.height = 0;
+    params.title = L"DesktopCharacters";
+    params.className = L"DesktopCharacters_Shadow001111";
+    params.topMost = true;
+    params.frameless = true;
+    params.fullscreen = true;
+    params.ignoreMouse = true;
+    params.layered = true;
+
+    mainWindow = std::make_unique<WindowClass>();
+    if (!mainWindow->createWindow(params))
     {
-        std::cout << "Failed to create character!" << std::endl;
+        std::cout << "Failed to create character window!" << std::endl;
         return false;
     }
 
+    return true;
+}
+
+// Add a new character (creates it internally)
+bool CharactersManager::addCharacter()
+{
+    Vec2 position;
+    Vec2 size(1.0f, 1.0f);
+
+    auto character = std::make_unique<Character>(position, size);
     characters.push_back(std::move(character));
-    std::cout << "Created character #" << characters.size() << std::endl;
+
     return true;
 }
 
@@ -50,37 +66,14 @@ void CharactersManager::closeAllCharacters()
     characters.clear(); // This will call destructors of all characters
 }
 
-// Remove dead characters
-void CharactersManager::removeDeadCharacters()
-{
-    auto it = std::remove_if(characters.begin(), characters.end(),
-        [](const std::unique_ptr<Character>& character) {
-            return !character->isAlive();
-        });
-
-    if (it != characters.end())
-    {
-        size_t removedCount = std::distance(it, characters.end());
-        characters.erase(it, characters.end());
-        std::cout << "Removed " << removedCount << " dead character(s). Remaining: " << characters.size() << std::endl;
-        if (characters.empty())
-        {
-            shouldExit = true;
-        }
-    }
-}
-
 void CharactersManager::updateCharacters(float deltaTime)
 {
-    Character::windowsData.clear();
-    Character::platform->getWindowsDataForCharacters(Character::windowsData);
+    windowsData.clear();
+    platformInterface->getWindowsDataForCharacters(windowsData);
 
     for (auto& character : characters)
     {
-        if (character->isAlive())
-        {
-            character->update(deltaTime);
-        }
+        character->update(deltaTime);
     }
 }
 
@@ -101,12 +94,6 @@ bool CharactersManager::checkExitKeys()
 // Run the main message loop for all characters
 int CharactersManager::runLoop()
 {
-    if (characters.empty())
-    {
-        std::cout << "No characters to run!" << std::endl;
-        return 0;
-    }
-
     std::cout << "Program is running. Press Ctrl+Shift+Q to exit." << std::endl;
     std::cout << "Click and drag characters to move them around!" << std::endl;
 
@@ -138,12 +125,27 @@ int CharactersManager::runLoop()
         // Update all characters
         updateCharacters(deltaTime);
 
-        // Remove any dead characters
-        removeDeadCharacters();
-
         // Small delay to prevent excessive CPU usage
-        Sleep(8); // ~120 FPS
+        Sleep(16); // ~60 FPS
     }
 
     return 0;
+}
+
+Vec2 CharactersManager::screenToWorld(const Vec2& screen) const
+{
+    Vec2 screenNormalized = screen / screenSize;
+    Vec2 normalized = screenNormalized * 2.0f - 1.0f;
+    normalized.y = -normalized.y;
+    Vec2 world = normalized * Character::worldSize;
+    return world;
+}
+
+Vec2 CharactersManager::worldToScreen(const Vec2& world) const
+{
+    Vec2 normalized = world / Character::worldSize;
+    normalized.y = -normalized.y;
+    Vec2 screenNormalized = (normalized + 1.0f) * 0.5f;
+    Vec2 screen = screenNormalized * screenSize;
+    return screen;
 }

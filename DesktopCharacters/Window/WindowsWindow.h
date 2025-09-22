@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <functional>
+#include <string>
 
 #include "BaseWindow.h"
 
@@ -22,14 +23,14 @@ public:
 
     HWND getHWND() const;
 private:
-    // Unique window class name for each instance
-    std::unique_ptr<wchar_t[]> uniqueClassName;
-
     // Handle to the window
     HWND hwnd;
 
     // Handle to the application instance
     HINSTANCE hInstance;
+
+    //
+    std::wstring className;
 
     // Static window procedure callback
     static LRESULT CALLBACK windowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

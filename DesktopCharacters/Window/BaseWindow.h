@@ -33,13 +33,15 @@ struct WindowEvent
 
 struct InitWindowParams
 {
-    int width;                 // Width of the window
-    int height;                // Height of the window
-    const wchar_t* title;      // Window title
-    bool topMost = false;              // Should the window stay on top
-    bool frameless = false;            // Should the window be frameless
-    bool fullscreen = false;           // Fill entire screen
-    bool ignoreMouse = false;          // Do not receive mouse clicks or drags
+    int width;              
+    int height;             
+    const wchar_t* title;   
+    const wchar_t* className;
+    bool topMost = false;   
+    bool frameless = false;
+    bool fullscreen = false;
+    bool ignoreMouse = false;
+    bool layered = false;
 };
 
 // Base class containing only pure virtual methods

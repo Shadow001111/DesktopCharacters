@@ -8,13 +8,6 @@
 WindowsWindow::WindowsWindow()
     : hwnd(nullptr), hInstance(GetModuleHandle(nullptr))
 {
-    // Generate unique class name using the object's address
-    static int classCounter = 0;
-    classCounter++;
-
-    // Create unique class name
-    uniqueClassName = std::make_unique<wchar_t[]>(50);
-    swprintf_s(uniqueClassName.get(), 50, L"MyWindowClass_%d_%p", classCounter, this);
 }
 
 // Destructor
@@ -27,22 +20,24 @@ WindowsWindow::~WindowsWindow()
     }
 
     // Unregister the unique window class
-    if (uniqueClassName)
+    if (!className.empty())
     {
-        UnregisterClass(uniqueClassName.get(), hInstance);
+        UnregisterClass(className.c_str(), hInstance);
     }
 }
 
 // Create window
 bool WindowsWindow::createWindow(const InitWindowParams& params)
 {
-    // Fill WNDCLASS with unique class name
+    className = params.className;
+
+    // Fill WNDCLASS
     WNDCLASS wc = {};
     wc.lpfnWndProc = WindowsWindow::windowProc;
     wc.hInstance = hInstance;
-    wc.lpszClassName = uniqueClassName.get();
+    wc.lpszClassName = params.className;
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wc.hbrBackground = CreateSolidBrush(RGB(255, 0, 0)); // Red background
+    wc.hbrBackground = nullptr;
 
     if (!RegisterClass(&wc))
     {
@@ -69,6 +64,11 @@ bool WindowsWindow::createWindow(const InitWindowParams& params)
         exStyle |= WS_EX_TRANSPARENT;
     }
 
+    if (params.layered)
+    {
+        exStyle |= WS_EX_LAYERED;
+    }
+
     // Window position and size
     int winX = CW_USEDEFAULT;
     int winY = CW_USEDEFAULT;
@@ -88,7 +88,7 @@ bool WindowsWindow::createWindow(const InitWindowParams& params)
     // Create window
     hwnd = CreateWindowEx(
         exStyle,
-        uniqueClassName.get(),
+        params.className,
         params.title,
         style,
         winX, winY, winW, winH,
@@ -100,12 +100,6 @@ bool WindowsWindow::createWindow(const InitWindowParams& params)
         DWORD error = GetLastError();
         std::cout << "CreateWindowEx failed with error: " << error << std::endl;
         return false;
-    }
-
-    // For topMost windows, we can also use SetWindowPos as an alternative/reinforcement
-    if (params.topMost)
-    {
-        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
     }
 
     ShowWindow(hwnd, SW_SHOW);

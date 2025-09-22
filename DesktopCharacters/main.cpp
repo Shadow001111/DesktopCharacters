@@ -26,14 +26,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 {
 #ifdef _DEBUG
     openConsole();
-    //SetConsoleOutputCP(CP_UTF8);
-    std::wcout.imbue(std::locale("Russian"));
+    SetConsoleOutputCP(CP_UTF8);
 #endif
 
     // Create the characters manager
     CharactersManager manager;
+    if (!manager.initialize())
+    {
+        return -1;
+    }
 
-    // Create multiple characters with the same parameters
+    // Create characters
     if (!manager.addCharacter())
     {
         return -1;
@@ -44,3 +47,5 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     return result;
 }
+
+// TODO: MainWindow prevents taskbar from opening. After a Windows key gets pressed, everything works.
