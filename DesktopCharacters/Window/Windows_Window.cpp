@@ -1,17 +1,18 @@
-#include "WindowsWindow.h"
+#include "Windows_Window.h"
+#include "Renderer/Windows_Renderer.h"
 
 #include <stdexcept>
 #include <iostream>
 #include <memory>
 
 // Constructor
-WindowsWindow::WindowsWindow()
+Windows_Window::Windows_Window()
     : hwnd(nullptr), hInstance(GetModuleHandle(nullptr))
 {
 }
 
 // Destructor
-WindowsWindow::~WindowsWindow()
+Windows_Window::~Windows_Window()
 {
     // If a window was created, destroy it
     if (hwnd)
@@ -27,13 +28,13 @@ WindowsWindow::~WindowsWindow()
 }
 
 // Create window
-bool WindowsWindow::createWindow(const InitWindowParams& params)
+bool Windows_Window::createWindow(const InitWindowParams& params)
 {
     className = params.className;
 
     // Fill WNDCLASS
     WNDCLASS wc = {};
-    wc.lpfnWndProc = WindowsWindow::windowProc;
+    wc.lpfnWndProc = Windows_Window::windowProc;
     wc.hInstance = hInstance;
     wc.lpszClassName = params.className;
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
@@ -50,7 +51,7 @@ bool WindowsWindow::createWindow(const InitWindowParams& params)
     DWORD style = params.frameless ? WS_POPUP : WS_OVERLAPPEDWINDOW;
 
     // Extended styles
-    DWORD exStyle = 0;
+    DWORD exStyle = WS_EX_APPWINDOW;;
 
     // Apply topMost parameter
     if (params.topMost)
@@ -102,14 +103,22 @@ bool WindowsWindow::createWindow(const InitWindowParams& params)
         return false;
     }
 
+    if (params.layered)
+    {
+        SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
+    }
+
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+
+    // Create renderer
+    renderer = std::make_unique<Windows_Renderer>(hwnd);
 
     return true;
 }
 
 // Main message loop
-int WindowsWindow::runLoop()
+int Windows_Window::runLoop()
 {
     MSG msg;
     while (GetMessage(&msg, nullptr, 0, 0))
@@ -121,39 +130,39 @@ int WindowsWindow::runLoop()
 }
 
 //
-bool WindowsWindow::isValid() const
+bool Windows_Window::isValid() const
 {
     return hwnd != nullptr && IsWindow(hwnd);
 }
 
-bool WindowsWindow::setPositionAndSize(int x, int y, int w, int h)
+bool Windows_Window::setPositionAndSize(int x, int y, int w, int h)
 {
     return SetWindowPos(hwnd, nullptr, x, y, w, h,
         SWP_NOZORDER | SWP_NOACTIVATE);
 }
 
-HWND WindowsWindow::getHWND() const
+HWND Windows_Window::getHWND() const
 {
     return hwnd;
 }
 
 // Static window procedure
-LRESULT CALLBACK WindowsWindow::windowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Windows_Window::windowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    WindowsWindow* window = nullptr;
+    Windows_Window* window = nullptr;
 
     // On WM_NCCREATE, store pointer to the class in window user data
     if (msg == WM_NCCREATE)
     {
         CREATESTRUCT* cs = reinterpret_cast<CREATESTRUCT*>(lParam);
-        window = reinterpret_cast<WindowsWindow*>(cs->lpCreateParams);
+        window = reinterpret_cast<Windows_Window*>(cs->lpCreateParams);
         SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(window));
         window->hwnd = hwnd;
     }
     else
     {
         // Retrieve pointer to class from window user data
-        window = reinterpret_cast<WindowsWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+        window = reinterpret_cast<Windows_Window*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
     }
 
     if (window)
@@ -165,7 +174,7 @@ LRESULT CALLBACK WindowsWindow::windowProc(HWND hwnd, UINT msg, WPARAM wParam, L
 }
 
 // Instance method handling messages
-LRESULT WindowsWindow::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT Windows_Window::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
 {
     if (callback)
     {
@@ -199,6 +208,7 @@ LRESULT WindowsWindow::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
             evt.type = WindowEventType::MouseMove;
             evt.localMouseX = GET_X_LPARAM(lParam);
             evt.localMouseY = GET_Y_LPARAM(lParam);
+            std::cout << 1;
             break;
 
         case WM_KEYDOWN:
@@ -209,6 +219,10 @@ LRESULT WindowsWindow::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_KEYUP:
             evt.type = WindowEventType::KeyUp;
             evt.keyCode = static_cast<int>(wParam);
+            break;
+        case WM_PAINT:
+            if (renderer)
+                renderer->render();
             break;
         }
 

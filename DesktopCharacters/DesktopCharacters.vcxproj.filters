@@ -18,7 +18,7 @@
     <ClCompile Include="main.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Window\WindowsWindow.cpp">
+    <ClCompile Include="Window\Windows_Window.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="CharactersManager.cpp">
@@ -33,7 +33,13 @@
     <ClCompile Include="Window\BaseWindow.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="PlatformInterface\WindowsPlatformInterface.cpp">
+    <ClCompile Include="PlatformInterface\Windows_PlatformInterface.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\Renderer\Windows_Renderer.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Window\Renderer\BaseRenderer.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,7 +47,7 @@
     <ClInclude Include="Window\BaseWindow.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Window\WindowsWindow.h">
+    <ClInclude Include="Window\Windows_Window.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="CharactersManager.h">
@@ -56,7 +62,16 @@
     <ClInclude Include="PlatformInterface\BasePlatformInterface.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="PlatformInterface\WindowsPlatformInterface.h">
+    <ClInclude Include="PlatformInterface\Windows_PlatformInterface.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Window\Renderer\Windows_Renderer.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Window\Renderer\BaseRenderer.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Core\Color.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

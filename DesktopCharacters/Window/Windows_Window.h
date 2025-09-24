@@ -9,11 +9,11 @@
 #include "BaseWindow.h"
 
 // WindowsWindow inherits from BaseWindow
-class WindowsWindow : public BaseWindow
+class Windows_Window : public BaseWindow
 {
 public:
-    WindowsWindow();
-    ~WindowsWindow();
+    Windows_Window();
+    ~Windows_Window();
 
     bool createWindow(const InitWindowParams& params) override;
     int runLoop() override;

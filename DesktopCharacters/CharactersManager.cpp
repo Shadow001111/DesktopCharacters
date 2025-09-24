@@ -20,22 +20,22 @@ bool CharactersManager::initialize()
     // Platform
     platformInterface = std::make_unique<PlatformInterfaceClass>();
 
-    int scrW, scrH;
-    platformInterface->getScreenResolution(scrW, scrH);
+    int scrW = 300, scrH = 300;
+    //platformInterface->getScreenResolution(scrW, scrH);
     screenSize = Vec2(scrW, scrH);
 
     Character::worldSize = Vec2((float)scrW / (float)scrH, 1.0f) * 5.0f;
 
     // Main window
     InitWindowParams params;
-    params.width = 0;
-    params.height = 0;
+    params.width = scrW;
+    params.height = scrH;
     params.title = L"DesktopCharacters";
     params.className = L"DesktopCharacters_Shadow001111";
     params.topMost = true;
     params.frameless = true;
-    params.fullscreen = true;
-    params.ignoreMouse = true;
+    //params.fullscreen = true;
+    //params.ignoreMouse = true;
     params.layered = true;
 
     mainWindow = std::make_unique<WindowClass>();
@@ -44,6 +44,10 @@ bool CharactersManager::initialize()
         std::cout << "Failed to create character window!" << std::endl;
         return false;
     }
+
+    mainWindow->setCallback([this](const WindowEvent& evt) {
+        this->onWindowEvent(evt);
+        });
 
     return true;
 }
@@ -77,6 +81,29 @@ void CharactersManager::updateCharacters(float deltaTime)
     }
 }
 
+void CharactersManager::renderCharacters()
+{
+    for (const auto& character : characters)
+    {
+        const Vec2 position = character->getPosition();
+        const Vec2 size = character->getSize();
+
+        Vec2 charMin = position - size * 0.5f;
+        Vec2 charMax = position + size * 0.5f;
+
+        Vec2 p1 = worldToScreen(charMin);
+        Vec2 p2 = worldToScreen(charMax);
+
+        Vec2 topLeft = Vec2(p1.x, p2.y);
+        Vec2 bottomRight = Vec2(p2.x, p1.y);
+        Vec2 rectSize = bottomRight - topLeft;
+
+        Color color = { 1.0f, 0.0f, 0.0f, 1.0f };
+
+        mainWindow->getRenderer()->drawRectangle(topLeft, rectSize, color);
+    }
+}
+
 // Get the number of characters
 size_t CharactersManager::getCharacterCount() const
 {
@@ -89,6 +116,11 @@ bool CharactersManager::checkExitKeys()
     return (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
         (GetAsyncKeyState(VK_SHIFT) & 0x8000) &&
         (GetAsyncKeyState('Q') & 0x8000);
+}
+
+void CharactersManager::onWindowEvent(const WindowEvent& evt)
+{
+    
 }
 
 // Run the main message loop for all characters
@@ -124,6 +156,9 @@ int CharactersManager::runLoop()
 
         // Update all characters
         updateCharacters(deltaTime);
+
+        // Render all characters
+        renderCharacters();
 
         // Small delay to prevent excessive CPU usage
         Sleep(16); // ~60 FPS

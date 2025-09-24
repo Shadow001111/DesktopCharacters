@@ -1,5 +1,8 @@
 #pragma once
+#include "Renderer/BaseRenderer.h"
+
 #include <functional>
+#include <memory>
 
 enum class WindowEventType
 {
@@ -59,6 +62,9 @@ public:
     virtual bool isValid() const = 0;
 
     void setCallback(EventCallback cb);
+
+    BaseRenderer* getRenderer() const;
 protected:
     EventCallback callback;
+    std::unique_ptr<BaseRenderer> renderer;
 };

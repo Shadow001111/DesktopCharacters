@@ -1,4 +1,3 @@
-#include "Window/WindowsWindow.h"
 #include "CharactersManager.h"
 
 #include <iostream>

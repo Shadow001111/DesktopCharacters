@@ -1,9 +1,9 @@
 #pragma once
-#include "Window/WindowsWindow.h"
-using WindowClass = WindowsWindow;
+#include "Window/Windows_Window.h"
+using WindowClass = Windows_Window;
 
-#include "PlatformInterface/WindowsPlatformInterface.h"
-using PlatformInterfaceClass = WindowsPlatformInterface;
+#include "PlatformInterface/Windows_PlatformInterface.h"
+using PlatformInterfaceClass = Windows_PlatformInterface;
 
 #include "Character.h"
 
@@ -30,11 +30,14 @@ public:
     bool addCharacter();
     void closeAllCharacters();
     void updateCharacters(float deltaTime);
+    void renderCharacters();
     size_t getCharacterCount() const;
 
     int runLoop();
 private:
     bool checkExitKeys();
+
+    void onWindowEvent(const WindowEvent& evt);
 
     Vec2 screenToWorld(const Vec2& screen) const;
     Vec2 worldToScreen(const Vec2& world) const;

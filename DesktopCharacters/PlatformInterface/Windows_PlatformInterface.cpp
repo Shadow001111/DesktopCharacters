@@ -1,11 +1,11 @@
-#include "WindowsPlatformInterface.h"
+#include "Windows_PlatformInterface.h"
 
 #include <windows.h>
 #include <unordered_set>
 
 #include <iostream>
 
-struct WindowsWindowData
+struct Windows_WindowData
 {
     HWND hwnd;
     std::wstring title;
@@ -19,7 +19,7 @@ const std::unordered_set<std::wstring> BANNED_CLASS_NAMES =
     
 };
 
-static std::vector<WindowsWindowData> globalTempWindowsWindowsData;
+static std::vector<Windows_WindowData> globalTempWindowsWindowsData;
 static int g_orderCounter = 0;
 
 BOOL CALLBACK EnumWindowsCallback(HWND hwnd, LPARAM lParam)
@@ -72,7 +72,7 @@ BOOL CALLBACK EnumWindowsCallback(HWND hwnd, LPARAM lParam)
         return TRUE;
 
     // Construct WindowData
-    WindowsWindowData wd;
+    Windows_WindowData wd;
     wd.hwnd = hwnd;
     wd.title = wtitle;
     wd.className = wclassName;
@@ -85,7 +85,7 @@ BOOL CALLBACK EnumWindowsCallback(HWND hwnd, LPARAM lParam)
 }
 
 
-bool WindowsPlatformInterface::getMouseButtonPressed(MouseButton button) const
+bool Windows_PlatformInterface::getMouseButtonPressed(MouseButton button) const
 {
     int vkCode = 0;
     switch (button)
@@ -103,7 +103,7 @@ bool WindowsPlatformInterface::getMouseButtonPressed(MouseButton button) const
     return (GetAsyncKeyState(vkCode) & 0x8000) != 0;
 }
 
-void WindowsPlatformInterface::getGlobalMousePosition(int& x, int& y) const
+void Windows_PlatformInterface::getGlobalMousePosition(int& x, int& y) const
 {
     POINT pt;
     if (GetCursorPos(&pt))
@@ -116,13 +116,13 @@ void WindowsPlatformInterface::getGlobalMousePosition(int& x, int& y) const
     y = 0;
 }
 
-void WindowsPlatformInterface::getScreenResolution(int& w, int& h) const
+void Windows_PlatformInterface::getScreenResolution(int& w, int& h) const
 {
     w = GetSystemMetrics(SM_CXSCREEN);
     h = GetSystemMetrics(SM_CYSCREEN);
 }
 
-void WindowsPlatformInterface::getWindowsDataForCharacters(std::vector<WindowData>& result) const
+void Windows_PlatformInterface::getWindowsDataForCharacters(std::vector<WindowData>& result) const
 {
     globalTempWindowsWindowsData.clear();
     g_orderCounter = 0;

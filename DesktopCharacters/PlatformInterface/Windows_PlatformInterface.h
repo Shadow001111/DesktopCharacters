@@ -1,7 +1,7 @@
 #pragma once
 #include "BasePlatformInterface.h"
 
-class WindowsPlatformInterface : public BasePlatformInterface
+class Windows_PlatformInterface : public BasePlatformInterface
 {
 public:
     bool getMouseButtonPressed(MouseButton button) const override;
