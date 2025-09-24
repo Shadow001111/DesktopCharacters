@@ -207,10 +207,6 @@ LRESULT Windows_Window::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
             evt.type = WindowEventType::KeyUp;
             evt.keyCode = static_cast<int>(wParam);
             break;
-        case WM_PAINT:
-            if (renderer)
-                renderer->render();
-            break;
         }
 
         if (evt.type != WindowEventType::None)

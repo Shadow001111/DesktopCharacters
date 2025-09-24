@@ -7,8 +7,8 @@ class BaseRenderer
 public:
 	virtual ~BaseRenderer() = default;
 
-	// Render
-	virtual void render() = 0;
+	virtual void beforeRender() = 0;
+	virtual void afterRender() = 0;
 
 	// Shape drawing
 	virtual void drawRectangle(float x, float y, float w, float h, const Color& color) = 0;

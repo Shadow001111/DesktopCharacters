@@ -14,7 +14,8 @@ public:
     Windows_Renderer(HWND hwnd);
     ~Windows_Renderer();
 
-    void render() override;
+    void beforeRender() override;
+    void afterRender() override;
 
     void drawRectangle(float x, float y, float w, float h, const Color& color) override;
 
@@ -30,24 +31,4 @@ private:
     ID2D1Factory* factory;
     ID2D1HwndRenderTarget* renderTarget;
     ID2D1SolidColorBrush* brush;
-
-    // Shape data
-    enum class ShapeType { None, Rect, Ellipse, Line };
-
-    struct Shape
-    {
-        ShapeType type;
-        D2D1::ColorF color;
-        float stroke;
-        D2D1_RECT_F rect;
-        D2D1_ELLIPSE ellipse;
-        D2D1_POINT_2F start;
-        D2D1_POINT_2F end;
-
-        Shape(ShapeType t, const D2D1::ColorF& c)
-            : type(t), color(c), stroke(1.0f), rect{}, ellipse{}, start{}, end{}
-        {}
-    };
-
-    std::vector<Shape> pendingShapes;
 };

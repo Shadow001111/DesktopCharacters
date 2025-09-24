@@ -206,7 +206,7 @@ int CharactersManager::runLoop()
     {
         // Calculate delta time
         DWORD currentTime = GetTickCount64();
-        float deltaTime = (currentTime - lastTime) / 1000.0f; // Convert to seconds
+        float deltaTime = (currentTime - lastTime) * 0.001f; // Convert to seconds
         lastTime = currentTime;
 
         elapsed += deltaTime;
@@ -231,7 +231,9 @@ int CharactersManager::runLoop()
         updateCharacters(deltaTime);
 
         // Render all characters
+        mainWindow->getRenderer()->beforeRender();
         renderCharacters();
+        mainWindow->getRenderer()->afterRender();
         frames++;
 
         //

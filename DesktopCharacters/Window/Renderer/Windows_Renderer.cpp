@@ -15,6 +15,19 @@ Windows_Renderer::~Windows_Renderer()
     if (factory) factory->Release();
 }
 
+void Windows_Renderer::beforeRender()
+{
+    createResources();
+    renderTarget->BeginDraw();
+    
+    renderTarget->Clear(D2D1::ColorF(0, 0, 0, 0));
+}
+
+void Windows_Renderer::afterRender()
+{
+    renderTarget->EndDraw();
+}
+
 void Windows_Renderer::createResources()
 {
     // Render traget
@@ -69,68 +82,20 @@ void Windows_Renderer::discardResources()
     }
 }
 
-// Called on WM_PAINT
-void Windows_Renderer::render()
-{
-    createResources();
-
-    renderTarget->BeginDraw();
-    renderTarget->Clear(D2D1::ColorF(0, 0, 0, 0));
-
-    for (const auto& s : pendingShapes)
-    {
-        brush->SetColor(s.color);
-
-        switch (s.type)
-        {
-        case ShapeType::Rect:
-            renderTarget->FillRectangle(&s.rect, brush);
-            break;
-        case ShapeType::Ellipse:
-            renderTarget->FillEllipse(s.ellipse, brush);
-            break;
-        case ShapeType::Line:
-            renderTarget->DrawLine(s.start, s.end, brush, s.stroke);
-            break;
-        default:
-            break;
-        }
-    }
-
-    pendingShapes.clear();
-
-    HRESULT hr = renderTarget->EndDraw();
-    if (FAILED(hr) || hr == D2DERR_RECREATE_TARGET)
-        discardResources();
-}
-
 void Windows_Renderer::drawRectangle(float x, float y, float w, float h, const Color& color)
 {
-    Shape s{ ShapeType::Rect, D2D1::ColorF(color.r, color.g, color.b, color.a) };
-    s.rect = D2D1::RectF(x, y, x + w, y + h);
-    pendingShapes.push_back(s);
+    brush->SetColor({ color.r, color.g, color.b, color.a });
 
-    InvalidateRect(hwnd, nullptr, FALSE); // TODO: pass the rect as pointer
+    D2D1_RECT_F rect = { x, y, x + w, y + h };
+    renderTarget->FillRectangle(rect, brush);
 }
 
 void Windows_Renderer::drawEllipse(float cx, float cy, float rx, float ry, const Color& color)
 {
-    Shape s{ ShapeType::Ellipse, D2D1::ColorF(color.r, color.g, color.b, color.a) };
-
-    s.ellipse = D2D1::Ellipse(D2D1::Point2F(cx, cy), rx, ry);
-
-    pendingShapes.push_back(s);
-    InvalidateRect(hwnd, nullptr, FALSE);
+    
 }
 
 void Windows_Renderer::drawLine(float x1, float y1, float x2, float y2, const Color& color, float strokeWidth)
 {
-    Shape s{ ShapeType::Line, D2D1::ColorF(color.r, color.g, color.b, color.a) };
-
-    s.start = D2D1::Point2F(x1, y1);
-    s.end = D2D1::Point2F(x2, y2);
-    s.stroke = strokeWidth;
-
-    pendingShapes.push_back(s);
-    InvalidateRect(hwnd, nullptr, FALSE);
+    
 }
