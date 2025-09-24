@@ -24,7 +24,7 @@ bool CharactersManager::initialize()
     platformInterface->getScreenResolution(scrW, scrH);
     screenSize = Vec2(scrW, scrH);
 
-    Character::worldSize = Vec2((float)scrW / (float)scrH, 1.0f) * 5.0f;
+    Character::worldSize = Vec2((float)scrW / (float)scrH, 1.0f) * 2.5f;
 
     // Main window
     InitWindowParams params;
@@ -55,7 +55,7 @@ bool CharactersManager::initialize()
 // Add a new character
 bool CharactersManager::addCharacter(const Vec2& position, const Vec2& velocity)
 {
-    Vec2 size(1.0f, 1.0f);
+    Vec2 size(0.5f, 0.5f);
 
     auto character = std::make_unique<Character>(position, size);
     character->setVelocity(velocity);
@@ -199,12 +199,17 @@ int CharactersManager::runLoop()
     MSG msg;
     DWORD lastTime = GetTickCount64();
 
+    float elapsed = 0.0f;
+    int frames = 0;
+
     while (!shouldExit)
     {
         // Calculate delta time
         DWORD currentTime = GetTickCount64();
         float deltaTime = (currentTime - lastTime) / 1000.0f; // Convert to seconds
         lastTime = currentTime;
+
+        elapsed += deltaTime;
 
         // Check for messages
         while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -227,9 +232,18 @@ int CharactersManager::runLoop()
 
         // Render all characters
         renderCharacters();
+        frames++;
 
-        // Small delay to prevent excessive CPU usage
-        Sleep(16); // ~60 FPS
+        //
+        if (elapsed >= 1.0f)
+        {
+            float FPS = (float)frames / elapsed;
+
+            elapsed -= 1.0f;
+            frames = 0;
+
+            std::cout << FPS << std::endl;
+        }
     }
 
     return 0;

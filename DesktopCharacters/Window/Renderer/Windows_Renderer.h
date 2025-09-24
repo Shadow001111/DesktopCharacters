@@ -1,11 +1,12 @@
 #pragma once
 #include "BaseRenderer.h"
+
 #include <windows.h>
 #include <d2d1.h>
-#include <memory>
-
-// Link Direct2D
 #pragma comment(lib, "d2d1")
+
+#include <memory>
+#include <vector>
 
 class Windows_Renderer : public BaseRenderer
 {
@@ -28,13 +29,25 @@ private:
     HWND hwnd;
     ID2D1Factory* factory;
     ID2D1HwndRenderTarget* renderTarget;
+    ID2D1SolidColorBrush* brush;
 
-    // Shape data (for now just one at a time, can be extended to a queue)
+    // Shape data
     enum class ShapeType { None, Rect, Ellipse, Line };
-    ShapeType pendingShape;
-    D2D1_COLOR_F pendingColor;
-    D2D1_RECT_F rectData;
-    D2D1_ELLIPSE ellipseData;
-    D2D1_POINT_2F lineStart, lineEnd;
-    float lineStroke;
+
+    struct Shape
+    {
+        ShapeType type;
+        D2D1::ColorF color;
+        float stroke;
+        D2D1_RECT_F rect;
+        D2D1_ELLIPSE ellipse;
+        D2D1_POINT_2F start;
+        D2D1_POINT_2F end;
+
+        Shape(ShapeType t, const D2D1::ColorF& c)
+            : type(t), color(c), stroke(1.0f), rect{}, ellipse{}, start{}, end{}
+        {}
+    };
+
+    std::vector<Shape> pendingShapes;
 };

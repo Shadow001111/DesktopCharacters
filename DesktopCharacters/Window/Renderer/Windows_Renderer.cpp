@@ -1,9 +1,10 @@
 #include "Windows_Renderer.h"
+
 #include <stdexcept>
+#include <iostream>
 
 Windows_Renderer::Windows_Renderer(HWND hwnd)
-    : hwnd(hwnd), factory(nullptr), renderTarget(nullptr),
-    pendingShape(ShapeType::None), lineStroke(2.0f)
+    : hwnd(hwnd), factory(nullptr), renderTarget(nullptr)
 {
     D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &factory);
 }
@@ -16,6 +17,7 @@ Windows_Renderer::~Windows_Renderer()
 
 void Windows_Renderer::createResources()
 {
+    // Render traget
     if (renderTarget) return;
 
     RECT clientRect = {};
@@ -43,6 +45,14 @@ void Windows_Renderer::createResources()
 
     if (FAILED(hr))
         throw std::runtime_error("Failed to create render target");
+
+    // Brush
+    hr = renderTarget->CreateSolidColorBrush(
+        D2D1::ColorF(0, 0, 0), &brush
+    );
+    if (FAILED(hr)) {
+        throw std::runtime_error("Failed to create brush");
+    }
 }
 
 void Windows_Renderer::discardResources()
@@ -52,8 +62,14 @@ void Windows_Renderer::discardResources()
         renderTarget->Release();
         renderTarget = nullptr;
     }
+    if (brush)
+    {
+        brush->Release();
+        brush = nullptr;
+    }
 }
 
+// Called on WM_PAINT
 void Windows_Renderer::render()
 {
     createResources();
@@ -61,60 +77,60 @@ void Windows_Renderer::render()
     renderTarget->BeginDraw();
     renderTarget->Clear(D2D1::ColorF(0, 0, 0, 0));
 
-    if (pendingShape != ShapeType::None)
+    for (const auto& s : pendingShapes)
     {
-        ID2D1SolidColorBrush* brush = nullptr;
-        renderTarget->CreateSolidColorBrush(pendingColor, &brush);
+        brush->SetColor(s.color);
 
-        switch (pendingShape)
+        switch (s.type)
         {
         case ShapeType::Rect:
-            renderTarget->FillRectangle(&rectData, brush);
+            renderTarget->FillRectangle(&s.rect, brush);
             break;
         case ShapeType::Ellipse:
-            renderTarget->FillEllipse(ellipseData, brush);
+            renderTarget->FillEllipse(s.ellipse, brush);
             break;
         case ShapeType::Line:
-            renderTarget->DrawLine(lineStart, lineEnd, brush, lineStroke);
+            renderTarget->DrawLine(s.start, s.end, brush, s.stroke);
             break;
         default:
             break;
         }
-
-        if (brush) brush->Release();
-
-        pendingShape = ShapeType::None;
     }
+
+    pendingShapes.clear();
 
     HRESULT hr = renderTarget->EndDraw();
     if (FAILED(hr) || hr == D2DERR_RECREATE_TARGET)
         discardResources();
-
-    // TODO: Only draws one shape
 }
 
 void Windows_Renderer::drawRectangle(float x, float y, float w, float h, const Color& color)
 {
-    pendingShape = ShapeType::Rect;
-    pendingColor = D2D1::ColorF(color.r, color.g, color.b, color.a);
-    rectData = D2D1::RectF(x, y, x + w, y + h);
+    Shape s{ ShapeType::Rect, D2D1::ColorF(color.r, color.g, color.b, color.a) };
+    s.rect = D2D1::RectF(x, y, x + w, y + h);
+    pendingShapes.push_back(s);
+
     InvalidateRect(hwnd, nullptr, FALSE); // TODO: pass the rect as pointer
 }
 
 void Windows_Renderer::drawEllipse(float cx, float cy, float rx, float ry, const Color& color)
 {
-    pendingShape = ShapeType::Ellipse;
-    pendingColor = D2D1::ColorF(color.r, color.g, color.b, color.a);
-    ellipseData = D2D1::Ellipse(D2D1::Point2F(cx, cy), rx, ry);
+    Shape s{ ShapeType::Ellipse, D2D1::ColorF(color.r, color.g, color.b, color.a) };
+
+    s.ellipse = D2D1::Ellipse(D2D1::Point2F(cx, cy), rx, ry);
+
+    pendingShapes.push_back(s);
     InvalidateRect(hwnd, nullptr, FALSE);
 }
 
 void Windows_Renderer::drawLine(float x1, float y1, float x2, float y2, const Color& color, float strokeWidth)
 {
-    pendingShape = ShapeType::Line;
-    pendingColor = D2D1::ColorF(color.r, color.g, color.b, color.a);
-    lineStart = D2D1::Point2F(x1, y1);
-    lineEnd = D2D1::Point2F(x2, y2);
-    lineStroke = strokeWidth;
+    Shape s{ ShapeType::Line, D2D1::ColorF(color.r, color.g, color.b, color.a) };
+
+    s.start = D2D1::Point2F(x1, y1);
+    s.end = D2D1::Point2F(x2, y2);
+    s.stroke = strokeWidth;
+
+    pendingShapes.push_back(s);
     InvalidateRect(hwnd, nullptr, FALSE);
 }
