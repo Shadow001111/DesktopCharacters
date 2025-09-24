@@ -3,6 +3,7 @@
 #include <iostream>
 
 Vec2 Character::worldSize;   // The logical world size for physics
+std::vector<Obstacle> Character::obstacles;
 
 void Character::updateAABB()
 {

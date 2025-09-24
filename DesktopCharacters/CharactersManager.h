@@ -41,13 +41,19 @@ public:
     bool initialize();
 
     bool addCharacter(const Vec2& position, const Vec2& velocity);
-    void closeAllCharacters();
-    void updateCharacters(float deltaTime);
-    void renderCharacters();
+
     size_t getCharacterCount() const;
 
     int runLoop();
 private:
+    void closeAllCharacters();
+
+    void update(float deltaTime);
+
+    void updateObstacles();
+
+    void render();
+
     bool checkExitKeys();
 
     void onWindowEvent(const WindowEvent& evt);
@@ -58,4 +64,5 @@ private:
 
     Vec2 screenToWorld(const Vec2& screen) const;
     Vec2 worldToScreen(const Vec2& world) const;
+    float map(float value, float min1, float max1, float min2, float max2) const;
 };

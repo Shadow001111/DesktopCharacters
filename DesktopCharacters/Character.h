@@ -4,6 +4,18 @@
 #include <memory>
 #include <vector>
 
+enum class ObstacleType
+{
+    Horizontal, Vertical
+};
+
+struct Obstacle
+{
+    ObstacleType type;
+    float min = 0.0f, max = 0.0f, perpOffset = 0.0f;
+    bool cantPassThrough = true;
+};
+
 // Character represents a desktop character entity
 class Character
 {
@@ -16,6 +28,7 @@ class Character
     void updateAABB();
 public:
     static Vec2 worldSize; // Center is at zero
+    static std::vector<Obstacle> obstacles;
 
     bool isBeingDragged = false;
 

@@ -17,9 +17,9 @@ public:
     void beforeRender() override;
     void afterRender() override;
 
-    void drawRectangle(float x, float y, float w, float h, const Color& color) override;
+    void drawRectangle(float x, float y, float w, float h, const Color& color, float strokeWidth = -1.0f) override;
 
-    void drawEllipse(float cx, float cy, float rx, float ry, const Color& color) override;
+    void drawEllipse(float cx, float cy, float rx, float ry, const Color& color, float strokeWidth = -1.0f) override;
 
     void drawLine(float x1, float y1, float x2, float y2, const Color& color, float strokeWidth = 2.0f) override;
 

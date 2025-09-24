@@ -25,7 +25,17 @@ void Windows_Renderer::beforeRender()
 
 void Windows_Renderer::afterRender()
 {
-    renderTarget->EndDraw();
+    HRESULT hr = renderTarget->EndDraw();
+
+    if (hr == D2DERR_RECREATE_TARGET)
+    {
+        // Device was lost (e.g., GPU reset, driver update, window moved to another GPU, etc.)
+        discardResources();
+    }
+    else if (FAILED(hr))
+    {
+        throw std::runtime_error("RenderTarget->EndDraw failed");
+    }
 }
 
 void Windows_Renderer::createResources()
@@ -82,20 +92,56 @@ void Windows_Renderer::discardResources()
     }
 }
 
-void Windows_Renderer::drawRectangle(float x, float y, float w, float h, const Color& color)
+void Windows_Renderer::drawRectangle(float x, float y, float w, float h, const Color& color, float strokeWidth)
 {
+    if (!renderTarget || !brush) return;
+
     brush->SetColor({ color.r, color.g, color.b, color.a });
 
     D2D1_RECT_F rect = { x, y, x + w, y + h };
-    renderTarget->FillRectangle(rect, brush);
+
+    if (strokeWidth <= 0.0f)
+    {
+        renderTarget->FillRectangle(rect, brush);
+    }
+    else
+    {
+        renderTarget->DrawRectangle(rect, brush, strokeWidth);
+    }
 }
 
-void Windows_Renderer::drawEllipse(float cx, float cy, float rx, float ry, const Color& color)
+void Windows_Renderer::drawEllipse(float cx, float cy, float rx, float ry, const Color& color, float strokeWidth)
 {
-    
+    if (!renderTarget || !brush) return;
+
+    brush->SetColor({ color.r, color.g, color.b, color.a });
+
+    D2D1_ELLIPSE ellipse = D2D1::Ellipse(
+        D2D1::Point2F(cx, cy),
+        rx,
+        ry
+    );
+
+    if (strokeWidth <= 0.0f)
+    {
+        renderTarget->FillEllipse(ellipse, brush);
+    }
+    else
+    {
+        renderTarget->DrawEllipse(ellipse, brush, strokeWidth);
+    }
 }
 
 void Windows_Renderer::drawLine(float x1, float y1, float x2, float y2, const Color& color, float strokeWidth)
 {
-    
+    if (!renderTarget || !brush) return;
+
+    brush->SetColor({ color.r, color.g, color.b, color.a });
+
+    renderTarget->DrawLine(
+        D2D1::Point2F(x1, y1),
+        D2D1::Point2F(x2, y2),
+        brush,
+        strokeWidth
+    );
 }
