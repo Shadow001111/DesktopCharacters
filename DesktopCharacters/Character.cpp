@@ -4,6 +4,11 @@
 
 Vec2 Character::worldSize;   // The logical world size for physics
 
+void Character::updateAABB()
+{
+    Vec2 halfSize = size * 0.5f;
+    aabb = AABB(position - halfSize, position + halfSize);
+}
 
 Character::Character(const Vec2& position, const Vec2& size)
     : position(position), size(size), velocity()
@@ -72,43 +77,12 @@ const Vec2& Character::getVelocity()
 void Character::update(float deltaTime)
 {
     // Dragging
-    if (dragging)
+    if (isBeingDragged)
     {
         velocity = Vec2();
-
-        //int mouseX, mouseY;
-        //platform->getGlobalMousePosition(mouseX, mouseY);
-
-        //Vec2 mousePosInWorldSpace = screenToWorld(Vec2(mouseX, mouseY));
-
-        //position = mousePosInWorldSpace + dragOffset;
-
-        //// Record history
-        //dragHistory.push_back({ position, deltaTime });
-        //float totalTime = 0.0f;
-        //for (int i = (int)dragHistory.size() - 1; i >= 0; --i)
-        //{
-        //    totalTime += dragHistory[i].time;
-        //    if (totalTime > dragHistoryDuration)
-        //    {
-        //        dragHistory.erase(dragHistory.begin(), dragHistory.begin() + i);
-        //        break;
-        //    }
-        //}
+        updateAABB();
         return;
     }
-        
-    /*dragging = false;
-    if (!dragHistory.empty())
-    {
-        Vec2 deltaPos = dragHistory.back().position - dragHistory.front().position;
-        float totalTime = 0.0f;
-        for (auto& s : dragHistory) totalTime += s.time;
-
-        if (totalTime > 0.0f)
-            velocity = deltaPos / totalTime;
-    }
-    dragHistory.clear();*/
     
     // Kinematics
     Vec2 gravity(0.0f, -10.0f);
@@ -137,13 +111,12 @@ void Character::update(float deltaTime)
         position.y = (worldSize.y - size.y * 0.5f);
         velocity.y *= -0.9f;
     }
+
+    // Update AABB
+    updateAABB();
 }
 
-void Character::startDrag(const Vec2& mousePos)
+const AABB& Character::getAABB() const
 {
-    dragging = true;
-    dragOffset = position - mousePos;
-
-    dragHistory.clear();
-    dragHistory.push_back({ position, 0.0f });
+    return aabb;
 }

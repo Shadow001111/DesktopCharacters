@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/Vec2.h"
+#include "Core/AABB.h"
 
 #include <memory>
 #include <vector>
@@ -7,8 +7,17 @@
 // Character represents a desktop character entity
 class Character
 {
+    Vec2 position;
+    Vec2 size;
+    Vec2 velocity;
+
+    AABB aabb;
+
+    void updateAABB();
 public:
     static Vec2 worldSize; // Center is at zero
+
+    bool isBeingDragged = false;
 
     Character(const Vec2& position, const Vec2& size);
     ~Character();
@@ -31,21 +40,5 @@ public:
 
     void update(float deltaTime);
 
-    void startDrag(const Vec2& mousePos);
-private:
-    // Character position and size
-    Vec2 position;
-    Vec2 size;
-    Vec2 velocity;
-
-    // Drag state
-    bool dragging;
-    Vec2 dragOffset; // Offset from mouse to character position when drag started
-    struct DragSample
-    {
-        Vec2 position;
-        float time; // in seconds
-    };
-    std::vector<DragSample> dragHistory;
-    float dragHistoryDuration = 0.1f; // track last 0.1 seconds for velocity
+    const AABB& getAABB() const;
 };

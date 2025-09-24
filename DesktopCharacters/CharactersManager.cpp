@@ -85,17 +85,11 @@ void CharactersManager::renderCharacters()
 {
     for (const auto& character : characters)
     {
-        const Vec2 position = character->getPosition();
-        const Vec2 size = character->getSize();
+        const AABB& aabb = character->getAABB();
 
-        Vec2 charMin = position - size * 0.5f;
-        Vec2 charMax = position + size * 0.5f;
+        Vec2 topLeft = worldToScreen({ aabb.minX, aabb.maxY });
+        Vec2 bottomRight = worldToScreen({ aabb.maxX, aabb.minY });
 
-        Vec2 p1 = worldToScreen(charMin);
-        Vec2 p2 = worldToScreen(charMax);
-
-        Vec2 topLeft = Vec2(p1.x, p2.y);
-        Vec2 bottomRight = Vec2(p2.x, p1.y);
         Vec2 rectSize = bottomRight - topLeft;
 
         Color color = { 1.0f, 0.0f, 0.0f, 1.0f };
@@ -122,7 +116,77 @@ void CharactersManager::onWindowEvent(const WindowEvent& evt)
 {
     if (evt.type == WindowEventType::LeftMouseDown)
     {
+        Vec2 mousePos = screenToWorld({ evt.localMouseX, evt.localMouseY });
+        interactLeftMouse(mousePos);
+    }
+}
 
+void CharactersManager::interactLeftMouse(const Vec2& mousePos)
+{
+    for (const auto& character : characters)
+    {
+        if (!character->getAABB().isContaining(mousePos))
+        {
+            continue;
+        }
+
+        character->isBeingDragged = true;
+        const Vec2& position = character->getPosition();
+
+        draggedCharacter = character.get();
+        dragOffset = position - mousePos;
+
+        dragHistory.clear();
+        dragHistory.push_back({ position, 0.0f });
+
+        break;
+    }
+}
+
+void CharactersManager::updateDragging(float deltaTime)
+{
+    if (draggedCharacter == nullptr)
+    {
+        return;
+    }
+
+    if (platformInterface->getMouseButtonPressed(MouseButton::Left))
+    {
+        int mouseX, mouseY;
+        platformInterface->getGlobalMousePosition(mouseX, mouseY);
+        Vec2 mousePosition = screenToWorld({ mouseX, mouseY });
+
+        dragHistory.push_back({ mousePosition, deltaTime });
+        float totalTime = 0.0f;
+        for (int i = (int)dragHistory.size() - 1; i >= 0; --i)
+        {
+            totalTime += dragHistory[i].time;
+            if (totalTime > dragHistoryDuration)
+            {
+                dragHistory.erase(dragHistory.begin(), dragHistory.begin() + i);
+                break;
+            }
+        }
+
+        draggedCharacter->setPosition(mousePosition + dragOffset);
+    }
+    else
+    {
+        if (!dragHistory.empty())
+        {
+            Vec2 deltaPos = dragHistory.back().position - dragHistory.front().position;
+            float totalTime = 0.0f;
+            for (auto& s : dragHistory) totalTime += s.time;
+
+            if (totalTime > 0.0f)
+            {
+                draggedCharacter->setVelocity(deltaPos / totalTime);
+            }
+        }
+        dragHistory.clear();
+
+        draggedCharacter->isBeingDragged = false;
+        draggedCharacter = nullptr;
     }
 }
 
@@ -157,7 +221,8 @@ int CharactersManager::runLoop()
             break;
         }
 
-        // Update all characters
+        // Updates
+        updateDragging(deltaTime);
         updateCharacters(deltaTime);
 
         // Render all characters
