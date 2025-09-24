@@ -51,7 +51,7 @@ void Windows_Renderer::createResources()
     D2D1_HWND_RENDER_TARGET_PROPERTIES hwndProps = {};
     hwndProps.hwnd = hwnd;
     hwndProps.pixelSize = D2D1::SizeU(width, height);
-    hwndProps.presentOptions = D2D1_PRESENT_OPTIONS_NONE;
+    hwndProps.presentOptions = D2D1_PRESENT_OPTIONS_IMMEDIATELY;
 
     HRESULT hr = factory->CreateHwndRenderTarget(rtProps, hwndProps, &renderTarget);
     ReleaseDC(hwnd, hdc);

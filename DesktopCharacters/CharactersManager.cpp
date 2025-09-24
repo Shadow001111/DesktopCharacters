@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <sstream>
 
+#include "Core/Profiler.h"
+
 // Constructor
 CharactersManager::CharactersManager() : shouldExit(false)
 {
@@ -204,6 +206,8 @@ int CharactersManager::runLoop()
 
     while (!shouldExit)
     {
+        Profiler::beginFrame();
+
         // Calculate delta time
         DWORD currentTime = GetTickCount64();
         float deltaTime = (currentTime - lastTime) * 0.001f; // Convert to seconds
@@ -212,10 +216,13 @@ int CharactersManager::runLoop()
         elapsed += deltaTime;
 
         // Check for messages
-        while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
         {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
+            PROFILE_SCOPE("Poll events");
+            while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+            {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
         }
 
         // Check for exit key combination
@@ -227,25 +234,37 @@ int CharactersManager::runLoop()
         }
 
         // Updates
-        updateDragging(deltaTime);
-        updateCharacters(deltaTime);
+        {
+            PROFILE_SCOPE("Updates");
+            updateDragging(deltaTime);
+            updateCharacters(deltaTime);
+        }
 
         // Render all characters
-        mainWindow->getRenderer()->beforeRender();
-        renderCharacters();
-        mainWindow->getRenderer()->afterRender();
+        {
+            PROFILE_SCOPE("Before render");
+            mainWindow->getRenderer()->beforeRender();
+        }
+        {
+            PROFILE_SCOPE("Render");
+            renderCharacters();
+        }
+        {
+            PROFILE_SCOPE("After render");
+            mainWindow->getRenderer()->afterRender();
+        }
         frames++;
 
-        //
-        if (elapsed >= 1.0f)
+        // Profiler
+        if (elapsed >= 3.0f)
         {
-            float FPS = (float)frames / elapsed;
+            elapsed -= 3.0f;
 
-            elapsed -= 1.0f;
-            frames = 0;
-
-            std::cout << FPS << std::endl;
+            Profiler::printProfileReport();
+            Profiler::resetAllProfiles();
         }
+
+        Profiler::endFrame();
     }
 
     return 0;
