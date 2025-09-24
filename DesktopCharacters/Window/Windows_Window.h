@@ -16,7 +16,6 @@ public:
     ~Windows_Window();
 
     bool createWindow(const InitWindowParams& params) override;
-    int runLoop() override;
     bool isValid() const;
 
     bool setPositionAndSize(int x, int y, int w, int h) override;

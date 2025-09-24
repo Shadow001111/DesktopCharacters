@@ -36,7 +36,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     }
 
     // Create characters
-    if (!manager.addCharacter())
+    if (!manager.addCharacter({-2, 0}, {1, 0}))
     {
         return -1;
     }

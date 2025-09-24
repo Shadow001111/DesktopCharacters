@@ -20,8 +20,8 @@ bool CharactersManager::initialize()
     // Platform
     platformInterface = std::make_unique<PlatformInterfaceClass>();
 
-    int scrW = 300, scrH = 300;
-    //platformInterface->getScreenResolution(scrW, scrH);
+    int scrW = 0, scrH = 0;
+    platformInterface->getScreenResolution(scrW, scrH);
     screenSize = Vec2(scrW, scrH);
 
     Character::worldSize = Vec2((float)scrW / (float)scrH, 1.0f) * 5.0f;
@@ -34,7 +34,7 @@ bool CharactersManager::initialize()
     params.className = L"DesktopCharacters_Shadow001111";
     params.topMost = true;
     params.frameless = true;
-    //params.fullscreen = true;
+    params.fullscreen = true;
     //params.ignoreMouse = true;
     params.layered = true;
 
@@ -52,13 +52,13 @@ bool CharactersManager::initialize()
     return true;
 }
 
-// Add a new character (creates it internally)
-bool CharactersManager::addCharacter()
+// Add a new character
+bool CharactersManager::addCharacter(const Vec2& position, const Vec2& velocity)
 {
-    Vec2 position;
     Vec2 size(1.0f, 1.0f);
 
     auto character = std::make_unique<Character>(position, size);
+    character->setVelocity(velocity);
     characters.push_back(std::move(character));
 
     return true;
@@ -120,7 +120,10 @@ bool CharactersManager::checkExitKeys()
 
 void CharactersManager::onWindowEvent(const WindowEvent& evt)
 {
-    
+    if (evt.type == WindowEventType::LeftMouseDown)
+    {
+
+    }
 }
 
 // Run the main message loop for all characters

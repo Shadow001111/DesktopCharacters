@@ -9,8 +9,8 @@ enum class WindowEventType
     None,
     Close,          // Window closed
     Resize,         // Resized
-    MouseDown,      // Mouse button pressed
-    MouseUp,        // Mouse button released
+    LeftMouseDown,  // Left mouse button pressed
+    LeftMouseUp,    // Left mouse button released
     MouseMove,      // Mouse moved
     KeyDown,        // Key pressed
     KeyUp,          // Key released
@@ -56,7 +56,6 @@ public:
     virtual ~BaseWindow() = default;
 
     virtual bool createWindow(const InitWindowParams& params) = 0;
-    virtual int runLoop() = 0;
     virtual bool setPositionAndSize(int x, int y, int w, int h) = 0;
 
     virtual bool isValid() const = 0;

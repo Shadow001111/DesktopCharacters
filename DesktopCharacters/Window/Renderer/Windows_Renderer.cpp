@@ -59,7 +59,7 @@ void Windows_Renderer::render()
     createResources();
 
     renderTarget->BeginDraw();
-    renderTarget->Clear(D2D1::ColorF(0.0f, 0.0f, 0.0f, 0.0f));
+    renderTarget->Clear(D2D1::ColorF(0, 0, 0, 0));
 
     if (pendingShape != ShapeType::None)
     {
@@ -82,11 +82,15 @@ void Windows_Renderer::render()
         }
 
         if (brush) brush->Release();
+
+        pendingShape = ShapeType::None;
     }
 
     HRESULT hr = renderTarget->EndDraw();
     if (FAILED(hr) || hr == D2DERR_RECREATE_TARGET)
         discardResources();
+
+    // TODO: Only draws one shape
 }
 
 void Windows_Renderer::drawRectangle(float x, float y, float w, float h, const Color& color)
@@ -94,7 +98,7 @@ void Windows_Renderer::drawRectangle(float x, float y, float w, float h, const C
     pendingShape = ShapeType::Rect;
     pendingColor = D2D1::ColorF(color.r, color.g, color.b, color.a);
     rectData = D2D1::RectF(x, y, x + w, y + h);
-    InvalidateRect(hwnd, nullptr, FALSE);
+    InvalidateRect(hwnd, nullptr, FALSE); // TODO: pass the rect as pointer
 }
 
 void Windows_Renderer::drawEllipse(float cx, float cy, float rx, float ry, const Color& color)

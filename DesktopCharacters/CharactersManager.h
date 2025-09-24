@@ -27,7 +27,7 @@ public:
 
     bool initialize();
 
-    bool addCharacter();
+    bool addCharacter(const Vec2& position, const Vec2& velocity);
     void closeAllCharacters();
     void updateCharacters(float deltaTime);
     void renderCharacters();

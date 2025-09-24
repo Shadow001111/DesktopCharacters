@@ -105,7 +105,7 @@ bool Windows_Window::createWindow(const InitWindowParams& params)
 
     if (params.layered)
     {
-        SetLayeredWindowAttributes(hwnd, 0, 255, LWA_ALPHA);
+        SetLayeredWindowAttributes(hwnd, RGB(0, 0, 0), 0, LWA_COLORKEY);
     }
 
     ShowWindow(hwnd, SW_SHOW);
@@ -115,18 +115,6 @@ bool Windows_Window::createWindow(const InitWindowParams& params)
     renderer = std::make_unique<Windows_Renderer>(hwnd);
 
     return true;
-}
-
-// Main message loop
-int Windows_Window::runLoop()
-{
-    MSG msg;
-    while (GetMessage(&msg, nullptr, 0, 0))
-    {
-        TranslateMessage(&msg);  // Translate keyboard input
-        DispatchMessage(&msg);   // Dispatch message to windowProc
-    }
-    return static_cast<int>(msg.wParam);
 }
 
 //
@@ -193,13 +181,13 @@ LRESULT Windows_Window::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_LBUTTONDOWN:
-            evt.type = WindowEventType::MouseDown;
+            evt.type = WindowEventType::LeftMouseDown;
             evt.localMouseX = GET_X_LPARAM(lParam);
             evt.localMouseY = GET_Y_LPARAM(lParam);
             break;
 
         case WM_LBUTTONUP:
-            evt.type = WindowEventType::MouseUp;
+            evt.type = WindowEventType::LeftMouseUp;
             evt.localMouseX = GET_X_LPARAM(lParam);
             evt.localMouseY = GET_Y_LPARAM(lParam);
             break;
@@ -208,7 +196,6 @@ LRESULT Windows_Window::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
             evt.type = WindowEventType::MouseMove;
             evt.localMouseX = GET_X_LPARAM(lParam);
             evt.localMouseY = GET_Y_LPARAM(lParam);
-            std::cout << 1;
             break;
 
         case WM_KEYDOWN:
