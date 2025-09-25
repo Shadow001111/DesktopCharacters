@@ -11,9 +11,13 @@ enum class ObstacleType
 
 struct Obstacle
 {
+    struct ObstacleSegment
+    {
+        float min = 0.0f, max = 0.0f;
+    };
     ObstacleType type;
-    float min = 0.0f, max = 0.0f, perpOffset = 0.0f;
-    bool cantPassThrough = true;
+    float perpOffset = 0.0f;
+    std::vector<ObstacleSegment> segments;
 };
 
 // Character represents a desktop character entity
@@ -25,9 +29,12 @@ class Character
 
     AABB aabb;
 
+    float elastcity = 0.9f;
+
     void updateAABB();
 
     float collisions(float deltaTime);
+    bool collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle);
 public:
     static Vec2 worldSize; // Center is at zero
     static std::vector<Obstacle> obstacles;

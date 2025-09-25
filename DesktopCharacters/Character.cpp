@@ -21,13 +21,9 @@ float Character::collisions(float deltaTime)
         if (obstacle.type == ObstacleType::Horizontal)
         {
             // X check
-            float obstX1 = obstacle.min;
-            float obstX2 = obstacle.max;
-
             float charX1 = position.x - size.x * 0.5f;
             float charX2 = position.x + size.x * 0.5f;
-
-            if (!(obstX1 < charX2 && charX1 < obstX2))
+            if (!collisionAxisCheck(charX1, charX2, obstacle))
             {
                 continue;
             }
@@ -44,13 +40,9 @@ float Character::collisions(float deltaTime)
         else
         {
             // Y check
-            float obstY1 = obstacle.min;
-            float obstY2 = obstacle.max;
-
             float charY1 = position.y - size.y * 0.5f;
             float charY2 = position.y + size.y * 0.5f;
-
-            if (!(obstY1 < charY2 && charY1 < obstY2))
+            if (!collisionAxisCheck(charY1, charY2, obstacle))
             {
                 continue;
             }
@@ -76,14 +68,30 @@ float Character::collisions(float deltaTime)
         position += velocity * minTime;
         if (flipVelocityXorY)
         {
-            velocity.y *= -1.0f;
+            velocity.y *= -elastcity;
         }
         else
         {
-            velocity.x *= -1.0f;
+            velocity.x *= -elastcity;
         }
         return minTime;
     }
+}
+
+bool Character::collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle)
+{
+    for (const auto& segment : obstacle.segments)
+    {
+        float obstX1 = segment.min;
+        float obstX2 = segment.max;
+
+        if (obstX1 < axisMax && axisMin < obstX2)
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 Character::Character(const Vec2& position, const Vec2& size)

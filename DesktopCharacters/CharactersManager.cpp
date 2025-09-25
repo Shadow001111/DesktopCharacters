@@ -240,7 +240,7 @@ int CharactersManager::runLoop()
         {
             elapsed -= 3.0f;
 
-            //Profiler::printProfileReport();
+            Profiler::printProfileReport();
             Profiler::resetAllProfiles();
         }
 
@@ -321,14 +321,13 @@ void CharactersManager::updateObstacles()
     obstacles.clear();
 
     // World
-    Obstacle obst;
-    obst.cantPassThrough = true;
-
     {
+        Obstacle obst;
+
         // Top
         obst.type = ObstacleType::Horizontal;
-        obst.min = -Character::worldSize.x;
-        obst.max = Character::worldSize.x;
+        obst.segments.clear();
+        obst.segments.push_back({ -Character::worldSize.x, Character::worldSize.x });
         obst.perpOffset = Character::worldSize.y;
         obstacles.push_back(obst);
 
@@ -338,8 +337,8 @@ void CharactersManager::updateObstacles()
 
         // Left
         obst.type = ObstacleType::Vertical;
-        obst.min = -Character::worldSize.y;
-        obst.max = Character::worldSize.y;
+        obst.segments.clear();
+        obst.segments.push_back({ -Character::worldSize.y, Character::worldSize.y });
         obst.perpOffset = -Character::worldSize.x;
         obstacles.push_back(obst);
 
@@ -349,9 +348,12 @@ void CharactersManager::updateObstacles()
     }
 
     // Windows
-    obst.cantPassThrough = false;
-    for (const auto& data : windowsData)
+    // TODO: Add constructor and move semantics for Obstacle
+    size_t windowsCount = windowsData.size();
+    for (size_t i = 0; i < windowsCount; i++)
     {
+        const auto& data = windowsData[i];
+
         Vec2 leftTop_screen = { data.x, data.y };
         Vec2 rectSize_screen = { data.w, data.h };
         Vec2 rightBottom_screen = leftTop_screen + rectSize_screen;
@@ -360,26 +362,34 @@ void CharactersManager::updateObstacles()
         Vec2 rightBottom = screenToWorld(rightBottom_screen);
 
         // Top
-        obst.type = ObstacleType::Horizontal;
-        obst.min = leftTop.x;
-        obst.max = rightBottom.x;
-        obst.perpOffset = leftTop.y;
-        obstacles.push_back(obst);
+        Obstacle top;
+        top.type = ObstacleType::Horizontal;
+        top.segments.push_back({ leftTop.x, rightBottom.x });
+        top.perpOffset = leftTop.y;
 
         // Bottom
-        obst.perpOffset = rightBottom.y;
-        obstacles.push_back(obst);
+        Obstacle bottom;
+        bottom.type = ObstacleType::Horizontal;
+        bottom.segments.push_back({ leftTop.x, rightBottom.x });
+        bottom.perpOffset = rightBottom.y;
 
         // Left
-        obst.type = ObstacleType::Vertical;
-        obst.min = rightBottom.y;
-        obst.max = leftTop.y;
-        obst.perpOffset = leftTop.x;
-        obstacles.push_back(obst);
+        Obstacle left;
+        left.type = ObstacleType::Vertical;
+        left.segments.push_back({ rightBottom.y, leftTop.y });
+        left.perpOffset = leftTop.x;
 
         // Right
-        obst.perpOffset = rightBottom.x;
-        obstacles.push_back(obst);
+        Obstacle right;
+        right.type = ObstacleType::Vertical;
+        right.segments.push_back({ rightBottom.y, leftTop.y });
+        right.perpOffset = rightBottom.x;
+
+        // TODO: New method. Each of these obstacles need their segments split by previous windows [0, i - 1]. Hidden parts shouldn't be seen.
+        obstacles.push_back(top);
+        obstacles.push_back(bottom);
+        obstacles.push_back(left);
+        obstacles.push_back(right);
     }
 }
 
@@ -415,44 +425,39 @@ void CharactersManager::render()
     // Get color by obstacle ID
     for (const auto& obst : Character::obstacles)
     {
-        Vec2 p1, p2;
-
-        if (obst.type == ObstacleType::Horizontal)
+        for (const auto& segment : obst.segments)
         {
-            float obst_min = map(obst.min, -Character::worldSize.x, Character::worldSize.x, 0.0f, screenSize.x);
-            float obst_max = map(obst.max, -Character::worldSize.x, Character::worldSize.x, 0.0f, screenSize.x);
-            float obst_perp = map(-obst.perpOffset, -Character::worldSize.y, Character::worldSize.y, 0.0f, screenSize.y);
+            Vec2 p1, p2;
 
-            p1.x = obst_min;
-            p1.y = obst_perp;
+            if (obst.type == ObstacleType::Horizontal)
+            {
+                float obst_min = map(segment.min, -Character::worldSize.x, Character::worldSize.x, 0.0f, screenSize.x);
+                float obst_max = map(segment.max, -Character::worldSize.x, Character::worldSize.x, 0.0f, screenSize.x);
+                float obst_perp = map(-obst.perpOffset, -Character::worldSize.y, Character::worldSize.y, 0.0f, screenSize.y);
 
-            p2.x = obst_max;
-            p2.y = obst_perp;
+                p1.x = obst_min;
+                p1.y = obst_perp;
+
+                p2.x = obst_max;
+                p2.y = obst_perp;
+            }
+            else
+            {
+                float obst_min = map(-segment.min, -Character::worldSize.y, Character::worldSize.y, 0.0f, screenSize.y);
+                float obst_max = map(-segment.max, -Character::worldSize.y, Character::worldSize.y, 0.0f, screenSize.y);
+                float obst_perp = map(obst.perpOffset, -Character::worldSize.x, Character::worldSize.x, 0.0f, screenSize.x);
+
+                p1.x = obst_perp;
+                p1.y = obst_min;
+
+                p2.x = obst_perp;
+                p2.y = obst_max;
+            }
+
+            Color color = { 0.0f, 0.0f, 1.0f, 1.0f };
+
+            mainWindow->getRenderer()->drawLine(p1, p2, color, 5.0f);
         }
-        else
-        {
-            float obst_min = map(-obst.min, -Character::worldSize.y, Character::worldSize.y, 0.0f, screenSize.y);
-            float obst_max = map(-obst.max, -Character::worldSize.y, Character::worldSize.y, 0.0f, screenSize.y);
-            float obst_perp = map(obst.perpOffset, -Character::worldSize.x, Character::worldSize.x, 0.0f, screenSize.x);
-
-            p1.x = obst_perp;
-            p1.y = obst_min;
-
-            p2.x = obst_perp;
-            p2.y = obst_max;
-        }
-
-        Color color;
-        if (obst.cantPassThrough)
-        {
-            color = { 1.0f, 0.0f, 0.0f, 1.0f };
-        }
-        else
-        {
-            color = { 0.0f, 0.0f, 1.0f, 1.0f };
-        }
-
-        mainWindow->getRenderer()->drawLine(p1, p2, color, 5.0f);
     }
 }
 
