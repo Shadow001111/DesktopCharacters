@@ -26,6 +26,8 @@ class Character
     AABB aabb;
 
     void updateAABB();
+
+    float collisions(float deltaTime);
 public:
     static Vec2 worldSize; // Center is at zero
     static std::vector<Obstacle> obstacles;

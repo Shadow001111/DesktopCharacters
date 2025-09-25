@@ -11,6 +11,81 @@ void Character::updateAABB()
     aabb = AABB(position - halfSize, position + halfSize);
 }
 
+float Character::collisions(float deltaTime)
+{
+    float minTime = FLT_MAX;
+    bool flipVelocityXorY = false;
+    
+    for (const auto& obstacle : obstacles)
+    {
+        if (obstacle.type == ObstacleType::Horizontal)
+        {
+            // X check
+            float obstX1 = obstacle.min;
+            float obstX2 = obstacle.max;
+
+            float charX1 = position.x - size.x * 0.5f;
+            float charX2 = position.x + size.x * 0.5f;
+
+            if (!(obstX1 < charX2 && charX1 < obstX2))
+            {
+                continue;
+            }
+
+            // Y check
+            float sign = copysignf(1.0f, velocity.y);
+            float t = (obstacle.perpOffset - (position.y + size.y * 0.5f * sign)) / velocity.y;
+            if (!(t <= 0.0f || t > deltaTime) && t < minTime)
+            {
+                minTime = t;
+                flipVelocityXorY = true;
+            }
+        }
+        else
+        {
+            // Y check
+            float obstY1 = obstacle.min;
+            float obstY2 = obstacle.max;
+
+            float charY1 = position.y - size.y * 0.5f;
+            float charY2 = position.y + size.y * 0.5f;
+
+            if (!(obstY1 < charY2 && charY1 < obstY2))
+            {
+                continue;
+            }
+
+            // X check
+            float sign = copysignf(1.0f, velocity.x);
+            float t = (obstacle.perpOffset - (position.x + size.x * 0.5f * sign)) / velocity.x;
+            if (!(t <= 0.0f || t > deltaTime) && t < minTime)
+            {
+                minTime = t;
+                flipVelocityXorY = false;
+            }
+        }
+    }
+
+    if (minTime > 999.0f)
+    {
+        position += velocity * deltaTime;
+        return 0.0f;
+    }
+    else
+    {
+        position += velocity * minTime;
+        if (flipVelocityXorY)
+        {
+            velocity.y *= -1.0f;
+        }
+        else
+        {
+            velocity.x *= -1.0f;
+        }
+        return minTime;
+    }
+}
+
 Character::Character(const Vec2& position, const Vec2& size)
     : position(position), size(size), velocity()
 {
@@ -85,32 +160,14 @@ void Character::update(float deltaTime)
         return;
     }
     
-    // Kinematics
+    // Kinematics / Collisions
     Vec2 gravity(0.0f, -10.0f);
-
     velocity += gravity * deltaTime;
-    position += velocity * deltaTime;
 
-    if (position.x < -(worldSize.x - size.x * 0.5f))
+    float timeBudget = deltaTime;
+    while (timeBudget > 0.0f)
     {
-        position.x = -(worldSize.x - size.x * 0.5f);
-        velocity.x *= -0.9f;
-    }
-    else if (position.x > (worldSize.x - size.x * 0.5f))
-    {
-        position.x = (worldSize.x - size.x * 0.5f);
-        velocity.x *= -0.9f;
-    }
-
-    if (position.y < -(worldSize.y - size.y * 0.5f))
-    {
-        position.y = -(worldSize.y - size.y * 0.5f);
-        velocity.y *= -0.9f;
-    }
-    else if (position.y > (worldSize.y - size.y * 0.5f))
-    {
-        position.y = (worldSize.y - size.y * 0.5f);
-        velocity.y *= -0.9f;
+        timeBudget = collisions(timeBudget);
     }
 
     // Update AABB

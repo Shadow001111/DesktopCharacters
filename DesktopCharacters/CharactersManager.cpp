@@ -311,7 +311,6 @@ void CharactersManager::removeContainedWindows()
         if (contains)
         {
             windowsData.erase(windowsData.begin() + i + 1);
-            std::cout << 1;
         }
     }
 }
