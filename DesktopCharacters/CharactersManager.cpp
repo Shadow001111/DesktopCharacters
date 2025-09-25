@@ -427,54 +427,50 @@ void CharactersManager::updateObstacles()
         Vec2 leftTop = screenToWorld(leftTop_screen);
         Vec2 rightBottom = screenToWorld(rightBottom_screen);
 
-        // Create obstacles with split segments
+        AABB windowAABB = { leftTop.x, rightBottom.y, rightBottom.x, leftTop.y };
 
         // Top edge
         Obstacle top;
         top.type = ObstacleType::Horizontal;
         top.perpOffset = leftTop.y;
         top.segments.emplace_back(leftTop.x, rightBottom.x);
-        for (const auto& occluder : occluders)
-        {
-            splitObstacleByAABB(top, occluder);
-        }
-        if (!top.segments.empty()) obstacles.push_back(top);
 
         // Bottom edge
         Obstacle bottom;
         bottom.type = ObstacleType::Horizontal;
         bottom.perpOffset = rightBottom.y;
         bottom.segments.emplace_back(leftTop.x, rightBottom.x);
-        for (const auto& occluder : occluders)
-        {
-            splitObstacleByAABB(bottom, occluder);
-        }
-        if (!bottom.segments.empty()) obstacles.push_back(bottom);
 
         // Left edge
         Obstacle left;
         left.type = ObstacleType::Vertical;
         left.perpOffset = leftTop.x;
         left.segments.emplace_back(rightBottom.y, leftTop.y);
-        for (const auto& occluder : occluders)
-        {
-            splitObstacleByAABB(left, occluder);
-        }
-        if (!left.segments.empty()) obstacles.push_back(left);
 
         // Right edge
         Obstacle right;
         right.type = ObstacleType::Vertical;
         right.perpOffset = rightBottom.x;
         right.segments.emplace_back(rightBottom.y, leftTop.y);
+
+        // Split
         for (const auto& occluder : occluders)
         {
-            splitObstacleByAABB(right, occluder);
+            if (occluder.isIntersecting(windowAABB))
+            {
+                splitObstacleByAABB(top, occluder);
+                splitObstacleByAABB(bottom, occluder);
+                splitObstacleByAABB(left, occluder);
+                splitObstacleByAABB(right, occluder);
+            }
         }
+        if (!top.segments.empty()) obstacles.push_back(top);
+        if (!bottom.segments.empty()) obstacles.push_back(bottom);
+        if (!left.segments.empty()) obstacles.push_back(left);
         if (!right.segments.empty()) obstacles.push_back(right);
 
         // Add occluder
-        occluders.emplace_back(leftTop.x, rightBottom.y, rightBottom.x, leftTop.y);
+        occluders.emplace_back(windowAABB);
     }
 }
 
