@@ -50,6 +50,9 @@ private:
 
     void update(float deltaTime);
 
+    void collectWindowsData();
+    void removeContainedWindows();
+
     void updateObstacles();
 
     void render();

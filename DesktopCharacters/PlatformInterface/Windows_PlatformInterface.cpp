@@ -16,6 +16,7 @@ struct Windows_WindowData
 
 const std::unordered_set<std::wstring> BANNED_CLASS_NAMES =
 {
+    L"DesktopCharacters_Shadow001111",
     L"Windows.UI.Core.CoreWindow",
     L"ApplicationFrameWindow"
 };

@@ -257,9 +257,11 @@ void CharactersManager::closeAllCharacters()
 
 void CharactersManager::update(float deltaTime)
 {
-    // Obstacles
-    windowsData.clear();
-    platformInterface->getWindowsDataForCharacters(windowsData);
+    // Collect windows data
+    collectWindowsData();
+    removeContainedWindows();
+
+    // Update obstacles
     updateObstacles();
 
     // Characters
@@ -283,6 +285,35 @@ void CharactersManager::update(float deltaTime)
         }
         std::cout << "-----------------------------" << std::endl;
     }*/
+}
+
+void CharactersManager::collectWindowsData()
+{
+    windowsData.clear();
+    platformInterface->getWindowsDataForCharacters(windowsData);
+}
+
+void CharactersManager::removeContainedWindows()
+{
+    if (windowsData.empty())
+    {
+        return;
+    }
+
+    for (size_t i = 0; i + 1 < windowsData.size(); i++)
+    {
+        const auto& outer = windowsData[i];
+        const auto& inner = windowsData[i + 1];
+
+        bool contains = inner.x >= outer.x && (inner.x + inner.w) <= (outer.x + outer.w) &&
+            inner.y >= outer.y && (inner.y + inner.h) <= (outer.y + outer.h);
+
+        if (contains)
+        {
+            windowsData.erase(windowsData.begin() + i + 1);
+            std::cout << 1;
+        }
+    }
 }
 
 void CharactersManager::updateObstacles()
