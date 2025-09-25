@@ -15,23 +15,38 @@ float Character::collisions(float deltaTime)
 {
     float minTime = FLT_MAX;
     bool flipVelocityXorY = false;
+
+    const Vec2 halfSize = size * 0.5f;
+
+    const float charX1 = position.x - halfSize.x;
+    const float charX2 = position.x + halfSize.x;
+    const float charY1 = position.y - halfSize.y;
+    const float charY2 = position.y + halfSize.y;
+
+    const float signVelX = copysignf(1.0f, velocity.x);
+    const float signVelY = copysignf(1.0f, velocity.y);
+
+    const float charBorderX = position.x + halfSize.x * signVelX;
+    const float charBorderY = position.y + halfSize.y * signVelY;
     
     for (const auto& obstacle : obstacles)
     {
         if (obstacle.type == ObstacleType::Horizontal)
         {
+            if (velocity.y == 0.0f)
+            {
+                continue;
+            }
+
             // X check
-            float charX1 = position.x - size.x * 0.5f;
-            float charX2 = position.x + size.x * 0.5f;
             if (!collisionAxisCheck(charX1, charX2, obstacle))
             {
                 continue;
             }
 
             // Y check
-            float sign = copysignf(1.0f, velocity.y);
-            float t = (obstacle.perpOffset - (position.y + size.y * 0.5f * sign)) / velocity.y;
-            if (!(t <= 0.0f || t > deltaTime) && t < minTime)
+            float t = (obstacle.perpOffset - charBorderY) / velocity.y;
+            if (t > 0.0f && t <= deltaTime && t < minTime)
             {
                 minTime = t;
                 flipVelocityXorY = true;
@@ -39,18 +54,20 @@ float Character::collisions(float deltaTime)
         }
         else
         {
+            if (velocity.x == 0.0f)
+            {
+                continue;
+            }
+
             // Y check
-            float charY1 = position.y - size.y * 0.5f;
-            float charY2 = position.y + size.y * 0.5f;
             if (!collisionAxisCheck(charY1, charY2, obstacle))
             {
                 continue;
             }
 
             // X check
-            float sign = copysignf(1.0f, velocity.x);
-            float t = (obstacle.perpOffset - (position.x + size.x * 0.5f * sign)) / velocity.x;
-            if (!(t <= 0.0f || t > deltaTime) && t < minTime)
+            float t = (obstacle.perpOffset - charBorderX) / velocity.x;
+            if (t > 0.0f && t <= deltaTime && t < minTime)
             {
                 minTime = t;
                 flipVelocityXorY = false;
@@ -185,4 +202,36 @@ void Character::update(float deltaTime)
 const AABB& Character::getAABB() const
 {
     return aabb;
+}
+
+Obstacle::Segment::Segment(float min, float max) :
+    min(min), max(max)
+{
+}
+
+Obstacle::Obstacle() :
+    type(ObstacleType::Horizontal)
+{
+}
+
+Obstacle::Obstacle(ObstacleType type, float perpOffset, float minX, float maxX) :
+    type(type), perpOffset(perpOffset)
+{
+    segments.emplace_back(minX, maxX);
+}
+
+Obstacle::Obstacle(Obstacle&& other) noexcept :
+    type(other.type), perpOffset(other.perpOffset), segments(std::move(other.segments))
+{
+}
+
+Obstacle& Obstacle::operator=(Obstacle&& other) noexcept
+{
+    if (this != &other)
+    {
+        type = other.type;
+        perpOffset = other.perpOffset;
+        segments = std::move(other.segments);
+    }
+    return *this;
 }

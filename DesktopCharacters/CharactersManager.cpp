@@ -385,29 +385,17 @@ void CharactersManager::updateObstacles()
 
     // World
     {
-        Obstacle obst;
-
         // Top
-        obst.type = ObstacleType::Horizontal;
-        obst.segments.clear();
-        obst.segments.push_back({ -Character::worldSize.x, Character::worldSize.x });
-        obst.perpOffset = Character::worldSize.y;
-        obstacles.push_back(obst);
+        obstacles.emplace_back(ObstacleType::Horizontal, Character::worldSize.y, -Character::worldSize.x, Character::worldSize.x);
 
         // Bottom
-        obst.perpOffset = -Character::worldSize.y;
-        obstacles.push_back(obst);
+        obstacles.emplace_back(ObstacleType::Horizontal, -Character::worldSize.y, -Character::worldSize.x, Character::worldSize.x);
 
         // Left
-        obst.type = ObstacleType::Vertical;
-        obst.segments.clear();
-        obst.segments.push_back({ -Character::worldSize.y, Character::worldSize.y });
-        obst.perpOffset = -Character::worldSize.x;
-        obstacles.push_back(obst);
+        obstacles.emplace_back(ObstacleType::Vertical, -Character::worldSize.x, -Character::worldSize.y, Character::worldSize.y);
 
         // Right
-        obst.perpOffset = Character::worldSize.x;
-        obstacles.push_back(obst);
+        obstacles.emplace_back(ObstacleType::Vertical, Character::worldSize.x, -Character::worldSize.y, Character::worldSize.y);
     }
 
     // Windows
@@ -429,29 +417,11 @@ void CharactersManager::updateObstacles()
 
         AABB windowAABB = { leftTop.x, rightBottom.y, rightBottom.x, leftTop.y };
 
-        // Top edge
-        Obstacle top;
-        top.type = ObstacleType::Horizontal;
-        top.perpOffset = leftTop.y;
-        top.segments.emplace_back(leftTop.x, rightBottom.x);
-
-        // Bottom edge
-        Obstacle bottom;
-        bottom.type = ObstacleType::Horizontal;
-        bottom.perpOffset = rightBottom.y;
-        bottom.segments.emplace_back(leftTop.x, rightBottom.x);
-
-        // Left edge
-        Obstacle left;
-        left.type = ObstacleType::Vertical;
-        left.perpOffset = leftTop.x;
-        left.segments.emplace_back(rightBottom.y, leftTop.y);
-
-        // Right edge
-        Obstacle right;
-        right.type = ObstacleType::Vertical;
-        right.perpOffset = rightBottom.x;
-        right.segments.emplace_back(rightBottom.y, leftTop.y);
+        // Create obstacles
+        Obstacle top(ObstacleType::Horizontal, leftTop.y, leftTop.x, rightBottom.x);
+        Obstacle bottom(ObstacleType::Horizontal, rightBottom.y, leftTop.x, rightBottom.x);
+        Obstacle left(ObstacleType::Vertical, leftTop.x, rightBottom.y, leftTop.y);
+        Obstacle right(ObstacleType::Vertical, rightBottom.x, rightBottom.y, leftTop.y);
 
         // Split
         for (const auto& occluder : occluders)
@@ -464,10 +434,10 @@ void CharactersManager::updateObstacles()
                 splitObstacleByAABB(right, occluder);
             }
         }
-        if (!top.segments.empty()) obstacles.push_back(top);
-        if (!bottom.segments.empty()) obstacles.push_back(bottom);
-        if (!left.segments.empty()) obstacles.push_back(left);
-        if (!right.segments.empty()) obstacles.push_back(right);
+        if (!top.segments.empty()) obstacles.push_back(std::move(top));
+        if (!bottom.segments.empty()) obstacles.push_back(std::move(bottom));
+        if (!left.segments.empty()) obstacles.push_back(std::move(left));
+        if (!right.segments.empty()) obstacles.push_back(std::move(right));
 
         // Add occluder
         occluders.emplace_back(windowAABB);
