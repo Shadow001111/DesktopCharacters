@@ -22,6 +22,72 @@ std::wstring getSafeString(const std::wstring& original)
     return safe;
 }
 
+void splitSegment(const Obstacle::Segment& a, const Obstacle::Segment& b, std::vector<Obstacle::Segment>& result)
+{
+    float left = fmaxf(a.min, b.min);
+    float right = fminf(a.max, b.max);
+
+    // If no overlap
+    if (left >= right)
+    {
+        result.push_back({ a.min, a.max });
+        return;
+    }
+
+    // Left piece
+    if (a.min < left)
+    {
+        result.push_back({ a.min, left });
+    }
+
+    // Right piece
+    if (right < a.max)
+    {
+        result.push_back({ right, a.max });
+    }
+}
+
+void splitObstacleByAABB(Obstacle& obstacle, const AABB& occluder)
+{
+    /*for (auto& segment : obstacle.segments)
+    {
+        segment.min += 2.1f;
+        segment.max -= 2.1f;
+    }
+    return;*/
+
+    std::vector<Obstacle::Segment> newSegments;
+
+    Obstacle::Segment occluderSegment;
+    if (obstacle.type == ObstacleType::Horizontal)
+    {
+        if (obstacle.perpOffset < occluder.minY || obstacle.perpOffset > occluder.maxY)
+        {
+            return;
+        }
+
+        occluderSegment.min = occluder.minX;
+        occluderSegment.max = occluder.maxX;
+    }
+    else
+    {
+        if (obstacle.perpOffset < occluder.minX || obstacle.perpOffset > occluder.maxX)
+        {
+            return;
+        }
+
+        occluderSegment.min = occluder.minY;
+        occluderSegment.max = occluder.maxY;
+    }
+
+    for (auto& segment : obstacle.segments)
+    {
+        splitSegment(segment, occluderSegment, newSegments);
+    }
+
+    obstacle.segments = std::move(newSegments);
+}
+
 // Constructor
 CharactersManager::CharactersManager() : shouldExit(false)
 {
@@ -361,35 +427,70 @@ void CharactersManager::updateObstacles()
         Vec2 leftTop = screenToWorld(leftTop_screen);
         Vec2 rightBottom = screenToWorld(rightBottom_screen);
 
-        // Top
+        // Collect occluders from previous windows
+        std::vector<AABB> occluders;
+
+        for (size_t j = 0; j < i; j++)
+        {
+            const auto& prevWindow = windowsData[j];
+
+            Vec2 a = { prevWindow.x, prevWindow.y };
+            Vec2 size = { prevWindow.w, prevWindow.h };
+            Vec2 b = a + size;
+
+            std::swap(a.y, b.y);
+
+            Vec2 aWorld = screenToWorld(a);
+            Vec2 bWorld = screenToWorld(b);
+
+            occluders.emplace_back(aWorld, bWorld);
+        }
+
+        // Create obstacles with split segments
+
+        // Top edge
         Obstacle top;
         top.type = ObstacleType::Horizontal;
-        top.segments.push_back({ leftTop.x, rightBottom.x });
         top.perpOffset = leftTop.y;
+        top.segments.emplace_back(leftTop.x, rightBottom.x);
+        for (const auto& occluder : occluders)
+        {
+            splitObstacleByAABB(top, occluder);
+        }
+        if (!top.segments.empty()) obstacles.push_back(top);
 
-        // Bottom
+        // Bottom edge
         Obstacle bottom;
         bottom.type = ObstacleType::Horizontal;
-        bottom.segments.push_back({ leftTop.x, rightBottom.x });
         bottom.perpOffset = rightBottom.y;
+        bottom.segments.emplace_back(leftTop.x, rightBottom.x);
+        for (const auto& occluder : occluders)
+        {
+            splitObstacleByAABB(bottom, occluder);
+        }
+        if (!bottom.segments.empty()) obstacles.push_back(bottom);
 
-        // Left
+        // Left edge
         Obstacle left;
         left.type = ObstacleType::Vertical;
-        left.segments.push_back({ rightBottom.y, leftTop.y });
         left.perpOffset = leftTop.x;
+        left.segments.emplace_back(rightBottom.y, leftTop.y);
+        for (const auto& occluder : occluders)
+        {
+            splitObstacleByAABB(left, occluder);
+        }
+        if (!left.segments.empty()) obstacles.push_back(left);
 
-        // Right
+        // Right edge
         Obstacle right;
         right.type = ObstacleType::Vertical;
-        right.segments.push_back({ rightBottom.y, leftTop.y });
         right.perpOffset = rightBottom.x;
-
-        // TODO: New method. Each of these obstacles need their segments split by previous windows [0, i - 1]. Hidden parts shouldn't be seen.
-        obstacles.push_back(top);
-        obstacles.push_back(bottom);
-        obstacles.push_back(left);
-        obstacles.push_back(right);
+        right.segments.emplace_back(rightBottom.y, leftTop.y);
+        for (const auto& occluder : occluders)
+        {
+            splitObstacleByAABB(right, occluder);
+        }
+        if (!right.segments.empty()) obstacles.push_back(right);
     }
 }
 

@@ -1,4 +1,7 @@
 #pragma once
+#undef min
+#undef max
+
 #include "Core/AABB.h"
 
 #include <memory>
@@ -11,13 +14,17 @@ enum class ObstacleType
 
 struct Obstacle
 {
-    struct ObstacleSegment
+    struct Segment
     {
         float min = 0.0f, max = 0.0f;
+
+        Segment() = default;
+        Segment(float min, float max) : min(min), max(max)
+        {}
     };
     ObstacleType type;
     float perpOffset = 0.0f;
-    std::vector<ObstacleSegment> segments;
+    std::vector<Segment> segments;
 };
 
 // Character represents a desktop character entity
