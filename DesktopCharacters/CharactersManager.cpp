@@ -49,13 +49,6 @@ void splitSegment(const Obstacle::Segment& a, const Obstacle::Segment& b, std::v
 
 void splitObstacleByAABB(Obstacle& obstacle, const AABB& occluder)
 {
-    /*for (auto& segment : obstacle.segments)
-    {
-        segment.min += 2.1f;
-        segment.max -= 2.1f;
-    }
-    return;*/
-
     std::vector<Obstacle::Segment> newSegments;
 
     Obstacle::Segment occluderSegment;
@@ -281,11 +274,7 @@ int CharactersManager::runLoop()
         }
 
         // Updates
-        {
-            PROFILE_SCOPE("Updates");
-            updateDragging(deltaTime);
-            update(deltaTime);
-        }
+        update(deltaTime);
 
         {
             PROFILE_SCOPE("Before render");
@@ -330,6 +319,9 @@ void CharactersManager::update(float deltaTime)
     // Update obstacles
     updateObstacles();
 
+    // Update dragging
+    updateDragging(deltaTime);
+
     // Characters
     for (auto& character : characters)
     {
@@ -355,12 +347,16 @@ void CharactersManager::update(float deltaTime)
 
 void CharactersManager::collectWindowsData()
 {
+    PROFILE_FUNCTION();
+
     windowsData.clear();
     platformInterface->getWindowsDataForCharacters(windowsData);
 }
 
 void CharactersManager::removeContainedWindows()
 {
+    PROFILE_FUNCTION();
+
     if (windowsData.empty())
     {
         return;
@@ -383,6 +379,7 @@ void CharactersManager::removeContainedWindows()
 
 void CharactersManager::updateObstacles()
 {
+    PROFILE_FUNCTION();
     auto& obstacles = Character::obstacles;
     obstacles.clear();
 
@@ -416,6 +413,9 @@ void CharactersManager::updateObstacles()
     // Windows
     // TODO: Add constructor and move semantics for Obstacle
     size_t windowsCount = windowsData.size();
+
+    std::vector<AABB> occluders;
+
     for (size_t i = 0; i < windowsCount; i++)
     {
         const auto& data = windowsData[i];
@@ -426,25 +426,6 @@ void CharactersManager::updateObstacles()
 
         Vec2 leftTop = screenToWorld(leftTop_screen);
         Vec2 rightBottom = screenToWorld(rightBottom_screen);
-
-        // Collect occluders from previous windows
-        std::vector<AABB> occluders;
-
-        for (size_t j = 0; j < i; j++)
-        {
-            const auto& prevWindow = windowsData[j];
-
-            Vec2 a = { prevWindow.x, prevWindow.y };
-            Vec2 size = { prevWindow.w, prevWindow.h };
-            Vec2 b = a + size;
-
-            std::swap(a.y, b.y);
-
-            Vec2 aWorld = screenToWorld(a);
-            Vec2 bWorld = screenToWorld(b);
-
-            occluders.emplace_back(aWorld, bWorld);
-        }
 
         // Create obstacles with split segments
 
@@ -491,6 +472,9 @@ void CharactersManager::updateObstacles()
             splitObstacleByAABB(right, occluder);
         }
         if (!right.segments.empty()) obstacles.push_back(right);
+
+        // Add occluder
+        occluders.emplace_back(leftTop.x, rightBottom.y, rightBottom.x, leftTop.y);
     }
 }
 
