@@ -46,7 +46,7 @@ float Character::collisions(float deltaTime)
 
             // Y check
             float t = (obstacle.perpOffset - charBorderY) / velocity.y;
-            if (t > 0.0f && t <= deltaTime && t < minTime)
+            if (t >= 0.0f && t <= deltaTime && t < minTime)
             {
                 minTime = t;
                 flipVelocityXorY = true;
@@ -67,7 +67,7 @@ float Character::collisions(float deltaTime)
 
             // X check
             float t = (obstacle.perpOffset - charBorderX) / velocity.x;
-            if (t > 0.0f && t <= deltaTime && t < minTime)
+            if (t >= 0.0f && t <= deltaTime && t < minTime)
             {
                 minTime = t;
                 flipVelocityXorY = false;
@@ -127,16 +127,6 @@ void Character::setPosition(float x, float y)
 void Character::setPosition(const Vec2& newPosition)
 {
     position = newPosition;
-}
-
-void Character::setSize(float width, float height)
-{
-    setSize(Vec2(width, height));
-}
-
-void Character::setSize(const Vec2& newSize)
-{
-    size = newSize;
 }
 
 void Character::setVelocity(float vx, float vy)

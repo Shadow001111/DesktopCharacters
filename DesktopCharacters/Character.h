@@ -35,6 +35,16 @@ struct Obstacle
     Obstacle& operator=(Obstacle&& other) noexcept;
 };
 
+struct CharacterMovementCharacteristics
+{
+    float maxSpeed;
+    float maxJumpVelocity;
+
+    float collisionElasticitySides;
+    float collisionElasticityRoof;
+    float collisionElasticityFloor;
+};
+
 // Character represents a desktop character entity
 class Character
 {
@@ -44,7 +54,7 @@ class Character
 
     AABB aabb;
 
-    float elastcity = 0.9f;
+    float elastcity = 0.0f;
 
     void updateAABB();
 
@@ -61,9 +71,6 @@ public:
 
     void setPosition(float x, float y);
     void setPosition(const Vec2& newPosition);
-
-    void setSize(float width, float height);
-    void setSize(const Vec2& newSize);
 
     void setVelocity(float vx, float vy);
     void setVelocity(const Vec2& newVelocity);
