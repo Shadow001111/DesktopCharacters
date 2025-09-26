@@ -1,6 +1,8 @@
+#pragma once
 #include <random>
 
-class Random {
+class Random
+{
 public:
     Random() = delete;
 

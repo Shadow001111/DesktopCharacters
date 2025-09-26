@@ -171,45 +171,45 @@ LRESULT Windows_Window::handleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
         switch (msg)
         {
         case WM_CLOSE:
-            evt.type = WindowEventType::Close;
+            evt.type = WindowEvent::Type::Close;
             break;
 
         case WM_SIZE:
-            evt.type = WindowEventType::Resize;
+            evt.type = WindowEvent::Type::Resize;
             evt.width = LOWORD(lParam);
             evt.height = HIWORD(lParam);
             break;
 
         case WM_LBUTTONDOWN:
-            evt.type = WindowEventType::LeftMouseDown;
+            evt.type = WindowEvent::Type::LeftMouseDown;
             evt.localMouseX = GET_X_LPARAM(lParam);
             evt.localMouseY = GET_Y_LPARAM(lParam);
             break;
 
         case WM_LBUTTONUP:
-            evt.type = WindowEventType::LeftMouseUp;
+            evt.type = WindowEvent::Type::LeftMouseUp;
             evt.localMouseX = GET_X_LPARAM(lParam);
             evt.localMouseY = GET_Y_LPARAM(lParam);
             break;
 
         case WM_MOUSEMOVE:
-            evt.type = WindowEventType::MouseMove;
+            evt.type = WindowEvent::Type::MouseMove;
             evt.localMouseX = GET_X_LPARAM(lParam);
             evt.localMouseY = GET_Y_LPARAM(lParam);
             break;
 
         case WM_KEYDOWN:
-            evt.type = WindowEventType::KeyDown;
+            evt.type = WindowEvent::Type::KeyDown;
             evt.keyCode = static_cast<int>(wParam);
             break;
 
         case WM_KEYUP:
-            evt.type = WindowEventType::KeyUp;
+            evt.type = WindowEvent::Type::KeyUp;
             evt.keyCode = static_cast<int>(wParam);
             break;
         }
 
-        if (evt.type != WindowEventType::None)
+        if (evt.type != WindowEvent::Type::None)
             callback(evt);
     }
 

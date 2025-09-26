@@ -4,23 +4,23 @@
 #include <functional>
 #include <memory>
 
-enum class WindowEventType
-{
-    None,
-    Close,          // Window closed
-    Resize,         // Resized
-    LeftMouseDown,  // Left mouse button pressed
-    LeftMouseUp,    // Left mouse button released
-    MouseMove,      // Mouse moved
-    KeyDown,        // Key pressed
-    KeyUp,          // Key released
-    FocusGained,    // Window gained focus
-    FocusLost       // Window lost focus
-};
-
 struct WindowEvent
 {
-    WindowEventType type = WindowEventType::None;
+    enum class Type
+    {
+        None,
+        Close,          // Window closed
+        Resize,         // Resized
+        LeftMouseDown,  // Left mouse button pressed
+        LeftMouseUp,    // Left mouse button released
+        MouseMove,      // Mouse moved
+        KeyDown,        // Key pressed
+        KeyUp,          // Key released
+        FocusGained,    // Window gained focus
+        FocusLost       // Window lost focus
+    };
+
+    Type type = Type::None;
 
     // Position info
     int localMouseX = 0;

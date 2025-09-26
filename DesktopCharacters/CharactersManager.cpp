@@ -410,7 +410,7 @@ bool CharactersManager::checkExitKeys()
 
 void CharactersManager::onWindowEvent(const WindowEvent& evt)
 {
-    if (evt.type == WindowEventType::LeftMouseDown)
+    if (evt.type == WindowEvent::Type::LeftMouseDown)
     {
         Vec2 mousePos = screenToWorld({ evt.localMouseX, evt.localMouseY });
         interactLeftMouse(mousePos);
