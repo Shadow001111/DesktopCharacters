@@ -12,17 +12,31 @@ using PlatformInterfaceClass = Windows_PlatformInterface;
 
 class CharactersManager
 {
+public:
+    CharactersManager();
+    ~CharactersManager();
+
+    bool initialize();
+
+    bool addCharacter(const Vec2& position, const Vec2& velocity);
+
+    int runLoop();
+private:
+    // Core platform and window management
     std::unique_ptr<BasePlatformInterface> platformInterface;
     std::unique_ptr<BaseWindow> mainWindow;
-
     Vec2 screenSize;
 
-    std::vector<WindowData> windowsData;
-
-    std::vector<std::unique_ptr<Character>> characters;
+    // State
     bool shouldExit;
 
-    // Drag
+    // Windows' data
+    std::vector<WindowData> windowsData;
+
+    // Characters
+    std::vector<std::unique_ptr<Character>> characters;
+
+    // Dragging
     Character* draggedCharacter = nullptr;
     Vec2 dragOffset; // Offset from mouse to character position when drag started
     struct DragSample
@@ -32,28 +46,13 @@ class CharactersManager
     };
     std::vector<DragSample> dragHistory;
     const float dragHistoryDuration = 0.1f; // track last 0.1 seconds for velocity
-
-    //
-public:
-    CharactersManager();
-    ~CharactersManager();
-
-    bool initialize();
-
-    bool addCharacter(const Vec2& position, const Vec2& velocity);
-
-    size_t getCharacterCount() const;
-
-    int runLoop();
 private:
-    void closeAllCharacters();
-
-    void update(float deltaTime);
-
     void collectWindowsData();
     void removeContainedWindows();
 
+    void update(float deltaTime);
     void updateObstacles();
+    void updateDragging(float deltaTime);
 
     void render();
 
@@ -63,9 +62,8 @@ private:
 
     void interactLeftMouse(const Vec2& mousePos);
 
-    void updateDragging(float deltaTime);
-
+    float map(float value, float min1, float max1, float min2, float max2) const;
+    Vec2 map(const Vec2& value, const Vec2& min1, const Vec2& max1, const Vec2& min2, const Vec2& max2) const;
     Vec2 screenToWorld(const Vec2& screen) const;
     Vec2 worldToScreen(const Vec2& world) const;
-    float map(float value, float min1, float max1, float min2, float max2) const;
 };

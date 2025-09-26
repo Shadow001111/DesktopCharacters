@@ -11,6 +11,22 @@ void Character::updateAABB()
     aabb = AABB(position - halfSize, position + halfSize);
 }
 
+// Checks overlap between a character's axis range and obstacle segments
+bool Character::collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle)
+{
+    for (const auto& segment : obstacle.segments)
+    {
+        float obstX1 = segment.min;
+        float obstX2 = segment.max;
+
+        if (obstX1 < axisMax && axisMin < obstX2)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 // Handles collisions and movement during deltaTime
 // Returns leftover time if a collision occurs
 float Character::collisions(float deltaTime)
@@ -96,26 +112,10 @@ float Character::collisions(float deltaTime)
         }
         else
         {
-            velocity.x *= elastcity;
+            velocity.x *= -elastcity;
         }
         return deltaTime - minimalTimeUntilCollision; // Remaining time to process
     }
-}
-
-// Checks overlap between a character's axis range and obstacle segments
-bool Character::collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle)
-{
-    for (const auto& segment : obstacle.segments)
-    {
-        float obstX1 = segment.min;
-        float obstX2 = segment.max;
-
-        if (obstX1 < axisMax && axisMin < obstX2)
-        {
-            return true;
-        }
-    }
-    return false;
 }
 
 Character::Character(const Vec2& position, const Vec2& size)

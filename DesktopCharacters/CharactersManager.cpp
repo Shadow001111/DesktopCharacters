@@ -81,15 +81,14 @@ void splitObstacleByAABB(Obstacle& obstacle, const AABB& occluder)
     obstacle.segments = std::move(newSegments);
 }
 
-// Constructor
+
 CharactersManager::CharactersManager() : shouldExit(false)
 {
 }
 
-// Destructor - automatically closes all characters
 CharactersManager::~CharactersManager()
 {
-    closeAllCharacters();
+    characters.clear();
 }
 
 bool CharactersManager::initialize()
@@ -130,7 +129,6 @@ bool CharactersManager::initialize()
     return true;
 }
 
-// Add a new character
 bool CharactersManager::addCharacter(const Vec2& position, const Vec2& velocity)
 {
     Vec2 size(0.5f, 0.5f);
@@ -140,98 +138,6 @@ bool CharactersManager::addCharacter(const Vec2& position, const Vec2& velocity)
     characters.push_back(std::move(character));
 
     return true;
-}
-
-// Get the number of characters
-size_t CharactersManager::getCharacterCount() const
-{
-    return characters.size();
-}
-
-// Check for exit key combination (Ctrl + Shift + Q)
-bool CharactersManager::checkExitKeys()
-{
-    return (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
-        (GetAsyncKeyState(VK_SHIFT) & 0x8000) &&
-        (GetAsyncKeyState('Q') & 0x8000);
-}
-
-void CharactersManager::onWindowEvent(const WindowEvent& evt)
-{
-    if (evt.type == WindowEventType::LeftMouseDown)
-    {
-        Vec2 mousePos = screenToWorld({ evt.localMouseX, evt.localMouseY });
-        interactLeftMouse(mousePos);
-    }
-}
-
-void CharactersManager::interactLeftMouse(const Vec2& mousePos)
-{
-    for (const auto& character : characters)
-    {
-        if (!character->getAABB().isContaining(mousePos))
-        {
-            continue;
-        }
-
-        character->isBeingDragged = true;
-        const Vec2& position = character->getPosition();
-
-        draggedCharacter = character.get();
-        dragOffset = position - mousePos;
-
-        dragHistory.clear();
-        dragHistory.push_back({ position, 0.0f });
-
-        break;
-    }
-}
-
-void CharactersManager::updateDragging(float deltaTime)
-{
-    if (draggedCharacter == nullptr)
-    {
-        return;
-    }
-
-    if (platformInterface->getMouseButtonPressed(MouseButton::Left))
-    {
-        int mouseX, mouseY;
-        platformInterface->getGlobalMousePosition(mouseX, mouseY);
-        Vec2 mousePosition = screenToWorld({ mouseX, mouseY });
-
-        dragHistory.push_back({ mousePosition, deltaTime });
-        float totalTime = 0.0f;
-        for (int i = (int)dragHistory.size() - 1; i >= 0; --i)
-        {
-            totalTime += dragHistory[i].time;
-            if (totalTime > dragHistoryDuration)
-            {
-                dragHistory.erase(dragHistory.begin(), dragHistory.begin() + i);
-                break;
-            }
-        }
-
-        draggedCharacter->setPosition(mousePosition + dragOffset);
-    }
-    else
-    {
-        if (!dragHistory.empty())
-        {
-            Vec2 deltaPos = dragHistory.back().position - dragHistory.front().position;
-            float totalTime = 0.0f;
-            for (auto& s : dragHistory) totalTime += s.time;
-
-            if (totalTime > 0.0f)
-            {
-                draggedCharacter->setVelocity(deltaPos / totalTime);
-            }
-        }
-        dragHistory.clear();
-
-        draggedCharacter->isBeingDragged = false;
-        draggedCharacter = nullptr;
-    }
 }
 
 int CharactersManager::runLoop()
@@ -306,10 +212,39 @@ int CharactersManager::runLoop()
     return 0;
 }
 
-void CharactersManager::closeAllCharacters()
+
+void CharactersManager::collectWindowsData()
 {
-    characters.clear(); // This will call destructors of all characters
+    PROFILE_FUNCTION();
+
+    windowsData.clear();
+    platformInterface->getWindowsDataForCharacters(windowsData);
 }
+
+void CharactersManager::removeContainedWindows()
+{
+    PROFILE_FUNCTION();
+
+    if (windowsData.empty())
+    {
+        return;
+    }
+
+    for (size_t i = 0; i + 1 < windowsData.size(); i++)
+    {
+        const auto& outer = windowsData[i];
+        const auto& inner = windowsData[i + 1];
+
+        bool contains = inner.x >= outer.x && (inner.x + inner.w) <= (outer.x + outer.w) &&
+            inner.y >= outer.y && (inner.y + inner.h) <= (outer.y + outer.h);
+
+        if (contains)
+        {
+            windowsData.erase(windowsData.begin() + i + 1);
+        }
+    }
+}
+
 
 void CharactersManager::update(float deltaTime)
 {
@@ -347,38 +282,6 @@ void CharactersManager::update(float deltaTime)
         }
         std::cout << "-----------------------------" << std::endl;
     }*/
-}
-
-void CharactersManager::collectWindowsData()
-{
-    PROFILE_FUNCTION();
-
-    windowsData.clear();
-    platformInterface->getWindowsDataForCharacters(windowsData);
-}
-
-void CharactersManager::removeContainedWindows()
-{
-    PROFILE_FUNCTION();
-
-    if (windowsData.empty())
-    {
-        return;
-    }
-
-    for (size_t i = 0; i + 1 < windowsData.size(); i++)
-    {
-        const auto& outer = windowsData[i];
-        const auto& inner = windowsData[i + 1];
-
-        bool contains = inner.x >= outer.x && (inner.x + inner.w) <= (outer.x + outer.w) &&
-            inner.y >= outer.y && (inner.y + inner.h) <= (outer.y + outer.h);
-
-        if (contains)
-        {
-            windowsData.erase(windowsData.begin() + i + 1);
-        }
-    }
 }
 
 void CharactersManager::updateObstacles()
@@ -445,6 +348,94 @@ void CharactersManager::updateObstacles()
 
         // Add occluder
         occluders.emplace_back(windowAABB);
+    }
+}
+
+void CharactersManager::updateDragging(float deltaTime)
+{
+    if (draggedCharacter == nullptr)
+    {
+        return;
+    }
+
+    if (platformInterface->getMouseButtonPressed(MouseButton::Left))
+    {
+        int mouseX, mouseY;
+        platformInterface->getGlobalMousePosition(mouseX, mouseY);
+        Vec2 mousePosition = screenToWorld({ mouseX, mouseY });
+
+        dragHistory.push_back({ mousePosition, deltaTime });
+        float totalTime = 0.0f;
+        for (int i = (int)dragHistory.size() - 1; i >= 0; --i)
+        {
+            totalTime += dragHistory[i].time;
+            if (totalTime > dragHistoryDuration)
+            {
+                dragHistory.erase(dragHistory.begin(), dragHistory.begin() + i);
+                break;
+            }
+        }
+
+        draggedCharacter->setPosition(mousePosition + dragOffset);
+    }
+    else
+    {
+        if (!dragHistory.empty())
+        {
+            Vec2 deltaPos = dragHistory.back().position - dragHistory.front().position;
+            float totalTime = 0.0f;
+            for (auto& s : dragHistory) totalTime += s.time;
+
+            if (totalTime > 0.0f)
+            {
+                draggedCharacter->setVelocity(deltaPos / totalTime);
+            }
+        }
+        dragHistory.clear();
+
+        draggedCharacter->isBeingDragged = false;
+        draggedCharacter = nullptr;
+    }
+}
+
+
+
+// Check for exit key combination (Ctrl + Shift + Q)
+bool CharactersManager::checkExitKeys()
+{
+    return (GetAsyncKeyState(VK_CONTROL) & 0x8000) &&
+        (GetAsyncKeyState(VK_SHIFT) & 0x8000) &&
+        (GetAsyncKeyState('Q') & 0x8000);
+}
+
+void CharactersManager::onWindowEvent(const WindowEvent& evt)
+{
+    if (evt.type == WindowEventType::LeftMouseDown)
+    {
+        Vec2 mousePos = screenToWorld({ evt.localMouseX, evt.localMouseY });
+        interactLeftMouse(mousePos);
+    }
+}
+
+void CharactersManager::interactLeftMouse(const Vec2& mousePos)
+{
+    for (const auto& character : characters)
+    {
+        if (!character->getAABB().isContaining(mousePos))
+        {
+            continue;
+        }
+
+        character->isBeingDragged = true;
+        const Vec2& position = character->getPosition();
+
+        draggedCharacter = character.get();
+        dragOffset = position - mousePos;
+
+        dragHistory.clear();
+        dragHistory.push_back({ position, 0.0f });
+
+        break;
     }
 }
 
@@ -516,26 +507,29 @@ void CharactersManager::render()
     }
 }
 
-Vec2 CharactersManager::screenToWorld(const Vec2& screen) const
-{
-    Vec2 screenNormalized = screen / screenSize;
-    Vec2 normalized = screenNormalized * 2.0f - 1.0f;
-    normalized.y = -normalized.y;
-    Vec2 world = normalized * Character::worldSize;
-    return world;
-}
-
-Vec2 CharactersManager::worldToScreen(const Vec2& world) const
-{
-    Vec2 normalized = world / Character::worldSize;
-    normalized.y = -normalized.y;
-    Vec2 screenNormalized = (normalized + 1.0f) * 0.5f;
-    Vec2 screen = screenNormalized * screenSize;
-    return screen;
-}
 
 float CharactersManager::map(float value, float min1, float max1, float min2, float max2) const
 {
     float normalized = (value - min1) / (max1 - min1);
     return min2 + normalized * (max2 - min2);
+}
+
+Vec2 CharactersManager::map(const Vec2& value, const Vec2& min1, const Vec2& max1, const Vec2& min2, const Vec2& max2) const
+{
+    Vec2 normalized = (value - min1) / (max1 - min1);
+    return min2 + normalized * (max2 - min2);
+}
+
+Vec2 CharactersManager::screenToWorld(const Vec2& screen) const
+{
+    Vec2 coord = map(screen, Vec2(), screenSize, -Character::worldSize, Character::worldSize);
+    coord.y = -coord.y;
+    return coord;
+}
+
+Vec2 CharactersManager::worldToScreen(const Vec2& world) const
+{
+    Vec2 coord = map(world, -Character::worldSize, Character::worldSize, Vec2(), screenSize);
+    coord.y = screenSize.y - coord.y;
+    return coord;
 }

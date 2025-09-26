@@ -6,18 +6,17 @@
 
 #include "Obstacle.h"
 
-#include <memory>
 #include <vector>
 
-struct CharacterMovementCharacteristics
-{
-    float maxSpeed;
-    float maxJumpVelocity;
-
-    float collisionElasticitySides;
-    float collisionElasticityRoof;
-    float collisionElasticityFloor;
-};
+//struct CharacterMovementCharacteristics
+//{
+//    float maxSpeed;
+//    float maxJumpVelocity;
+//
+//    float collisionElasticitySides;
+//    float collisionElasticityRoof;
+//    float collisionElasticityFloor;
+//};
 
 // Character represents a desktop character entity
 class Character
@@ -31,9 +30,8 @@ class Character
     float elastcity = 0.0f;
 
     void updateAABB();
-
-    float collisions(float deltaTime);
     bool collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle);
+    float collisions(float deltaTime);
 public:
     static Vec2 worldSize; // Center is at zero
     static std::vector<Obstacle> obstacles;
