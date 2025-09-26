@@ -21,6 +21,8 @@ public:
         float collisionElasticitySides = 0.0f;
         float collisionElasticityRoof = 0.0f;
         float collisionElasticityFloor = 0.0f;
+
+        float frictionFloor = 0.0f;
     };
 private:
     Vec2 position;
@@ -28,8 +30,9 @@ private:
     Vec2 velocity;
 
     AABB aabb;
-
     Data data;
+
+    bool isGrounded = false;
 
     bool collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle) const;
     float collisions(float deltaTime);

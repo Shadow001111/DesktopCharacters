@@ -104,6 +104,7 @@ float Character::collisions(float deltaTime)
         {
             float elasticity = signVelY > 0.0f ? data.collisionElasticityRoof : data.collisionElasticityFloor;
             velocity.y *= -elasticity;
+            isGrounded = signVelY < 0.0f;
         }
         else
         {
@@ -126,6 +127,8 @@ Character::~Character()
 
 void Character::update(float deltaTime)
 {
+    isGrounded = false;
+
     // If dragged by user -> stop physics
     if (isBeingDragged)
     {
@@ -136,7 +139,7 @@ void Character::update(float deltaTime)
 
     // Apply gravity
     // TODO: Make it world setting
-    Vec2 gravity(0.0f, -10.0f);
+    Vec2 gravity(0.0f, -20.0f);
     velocity += gravity * deltaTime;
 
     // Process collisions within the time step
@@ -144,6 +147,22 @@ void Character::update(float deltaTime)
     while (timeBudget > 0.0f)
     {
         timeBudget = collisions(timeBudget);
+    }
+
+    // Friction with floor
+    if (isGrounded)
+    {
+        const float signVelX = copysignf(1.0f, velocity.x);
+        float frictionImpulse = data.frictionFloor;
+
+        if (frictionImpulse > fabsf(velocity.x))
+        {
+            velocity.x = 0.0f;
+        }
+        else
+        {
+            velocity.x -= frictionImpulse * signVelX;
+        }
     }
 
     // Refresh bounding box after movement

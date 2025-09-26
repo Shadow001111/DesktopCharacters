@@ -40,12 +40,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     // Create characters
     Character::Data charData;
 
-    charData.maxSpeed = 0.2f;
+    charData.maxSpeed = 1.5f;
     charData.maxJumpVelocity = 1.0f;
 
     charData.collisionElasticitySides = 0.2f;
     charData.collisionElasticityRoof = 0.2f;
     charData.collisionElasticityFloor = 0.0f;
+
+    charData.frictionFloor = 0.4f;
 
     for (int i = 0; i < 1; i++)
     {
