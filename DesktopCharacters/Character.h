@@ -8,7 +8,7 @@
 
 #include <vector>
 
-//struct CharacterMovementCharacteristics
+//struct MovementCharacteristics
 //{
 //    float maxSpeed;
 //    float maxJumpVelocity;
@@ -29,8 +29,7 @@ class Character
 
     float elastcity = 0.0f;
 
-    void updateAABB();
-    bool collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle);
+    bool collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle) const;
     float collisions(float deltaTime);
 public:
     static Vec2 worldSize; // Center is at zero
@@ -43,20 +42,19 @@ public:
 
     //
     void update(float deltaTime);
+    void updateAABB();
 
     //
     void setPosition(float x, float y);
     void setPosition(const Vec2& newPosition);
-
     void setVelocity(float vx, float vy);
     void setVelocity(const Vec2& newVelocity);
-
     void move(float deltaX, float deltaY);
     void move(const Vec2& delta);
 
     // Getters
-    const Vec2& getPosition();
-    const Vec2& getSize();
-    const Vec2& getVelocity();
+    const Vec2& getPosition() const;
+    const Vec2& getSize() const;
+    const Vec2& getVelocity() const;
     const AABB& getAABB() const;
 };

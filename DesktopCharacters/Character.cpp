@@ -5,14 +5,8 @@
 Vec2 Character::worldSize;   // The logical world size for physics
 std::vector<Obstacle> Character::obstacles;
 
-void Character::updateAABB()
-{
-    Vec2 halfSize = size * 0.5f;
-    aabb = AABB(position - halfSize, position + halfSize);
-}
-
 // Checks overlap between a character's axis range and obstacle segments
-bool Character::collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle)
+bool Character::collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle) const
 {
     for (const auto& segment : obstacle.segments)
     {
@@ -32,7 +26,7 @@ bool Character::collisionAxisCheck(float axisMin, float axisMax, const Obstacle&
 float Character::collisions(float deltaTime)
 {
     float minimalTimeUntilCollision = FLT_MAX;
-    bool flipVelocityXorY = false;
+    bool isClosestObstacleHorizontal = false;
 
     const Vec2 halfSize = size * 0.5f;
 
@@ -70,7 +64,7 @@ float Character::collisions(float deltaTime)
             if (t >= 0.0f && t <= deltaTime && t < minimalTimeUntilCollision)
             {
                 minimalTimeUntilCollision = t;
-                flipVelocityXorY = true;
+                isClosestObstacleHorizontal = true;
             }
         }
         else
@@ -91,7 +85,7 @@ float Character::collisions(float deltaTime)
             if (t >= 0.0f && t <= deltaTime && t < minimalTimeUntilCollision)
             {
                 minimalTimeUntilCollision = t;
-                flipVelocityXorY = false;
+                isClosestObstacleHorizontal = false;
             }
         }
     }
@@ -106,7 +100,7 @@ float Character::collisions(float deltaTime)
     {
         // Collision detected
         position += velocity * minimalTimeUntilCollision;
-        if (flipVelocityXorY)
+        if (isClosestObstacleHorizontal)
         {
             velocity.y *= -elastcity;
         }
@@ -118,6 +112,7 @@ float Character::collisions(float deltaTime)
     }
 }
 
+
 Character::Character(const Vec2& position, const Vec2& size)
     : position(position), size(size), velocity()
 {
@@ -126,6 +121,7 @@ Character::Character(const Vec2& position, const Vec2& size)
 Character::~Character()
 {
 }
+
 
 void Character::update(float deltaTime)
 {
@@ -152,6 +148,13 @@ void Character::update(float deltaTime)
     // Refresh bounding box after movement
     updateAABB();
 }
+
+void Character::updateAABB()
+{
+    Vec2 halfSize = size * 0.5f;
+    aabb = AABB(position - halfSize, position + halfSize);
+}
+
 
 void Character::setPosition(float x, float y)
 {
@@ -185,17 +188,18 @@ void Character::move(const Vec2& delta)
     setPosition(position + delta);
 }
 
-const Vec2& Character::getPosition()
+
+const Vec2& Character::getPosition() const
 {
     return position;
 }
 
-const Vec2& Character::getSize()
+const Vec2& Character::getSize() const
 {
     return size;
 }
 
-const Vec2& Character::getVelocity()
+const Vec2& Character::getVelocity() const
 {
     return velocity;
 }
