@@ -89,9 +89,9 @@ float Character::collisions(float deltaTime)
         }
         else
         {
-            velocity.x *= -elastcity;
+            velocity.x *= -1.0f; // elastcity;
         }
-        return minTime;
+        return deltaTime - minTime;
     }
 }
 
