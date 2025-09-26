@@ -258,11 +258,21 @@ void CharactersManager::update(float deltaTime)
     // Update dragging
     updateDragging(deltaTime);
 
-    // Characters
+    // Update characters
     {
+        int mX, mY;
+        platformInterface->getGlobalMousePosition(mX, mY);
+
+        Vec2 mouseWorldPosition = screenToWorld(Vec2(mX, mY));
+
+        Character::FollowTarget target;
+        target.exist = true;
+        target.position = mouseWorldPosition;
+
         PROFILE_SCOPE("Update characters");
         for (auto& character : characters)
         {
+            character->setFollowTarget(target);
             character->update(deltaTime);
         }
     }

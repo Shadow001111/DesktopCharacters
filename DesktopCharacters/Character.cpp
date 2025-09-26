@@ -128,6 +128,7 @@ Character::~Character()
 void Character::update(float deltaTime)
 {
     isGrounded = false;
+    isMovingPurposefully = false;
 
     // If dragged by user -> stop physics
     if (isBeingDragged)
@@ -149,19 +150,28 @@ void Character::update(float deltaTime)
         timeBudget = collisions(timeBudget);
     }
 
-    // Friction with floor
-    if (isGrounded)
+    // Follow target
+    if (isGrounded && fabsf(velocity.x) <= data.maxSpeed)
     {
-        const float signVelX = copysignf(1.0f, velocity.x);
-        float frictionImpulse = data.frictionFloor;
+        followTarget(deltaTime);
+    }
 
-        if (frictionImpulse > fabsf(velocity.x))
+    if (!isMovingPurposefully)
+    {
+        // Friction with floor
+        if (isGrounded)
         {
-            velocity.x = 0.0f;
-        }
-        else
-        {
-            velocity.x -= frictionImpulse * signVelX;
+            const float signVelX = copysignf(1.0f, velocity.x);
+            float frictionImpulse = data.frictionFloor;
+
+            if (frictionImpulse > fabsf(velocity.x))
+            {
+                velocity.x = 0.0f;
+            }
+            else
+            {
+                velocity.x -= frictionImpulse * signVelX;
+            }
         }
     }
 
@@ -173,6 +183,30 @@ void Character::updateAABB()
 {
     Vec2 halfSize = size * 0.5f;
     aabb = AABB(position - halfSize, position + halfSize);
+}
+
+void Character::followTarget(float deltaTime)
+{
+    if (!targetToFollow.exist)
+    {
+        return;
+    }
+
+    isMovingPurposefully = true;
+
+    float dpos = targetToFollow.position.x - position.x;
+    float sign = copysignf(1.0f, dpos);
+
+    float speed = fabsf(dpos / deltaTime);
+    speed = fminf(speed, data.maxSpeed);
+
+    velocity.x = speed * sign;
+}
+
+
+void Character::setFollowTarget(const FollowTarget& newTarget)
+{
+    targetToFollow = newTarget;
 }
 
 
