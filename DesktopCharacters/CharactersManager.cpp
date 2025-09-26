@@ -129,11 +129,11 @@ bool CharactersManager::initialize()
     return true;
 }
 
-bool CharactersManager::addCharacter(const Vec2& position, const Vec2& velocity)
+bool CharactersManager::addCharacter(const Vec2& position, const Vec2& velocity, const Character::Data& charData)
 {
     Vec2 size(0.5f, 0.5f);
 
-    auto character = std::make_unique<Character>(position, size);
+    auto character = std::make_unique<Character>(position, size, charData);
     character->setVelocity(velocity);
     characters.push_back(std::move(character));
 

@@ -38,6 +38,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     }
 
     // Create characters
+    Character::Data charData;
+
+    charData.maxSpeed = 0.2f;
+    charData.maxJumpVelocity = 1.0f;
+
+    charData.collisionElasticitySides = 0.2f;
+    charData.collisionElasticityRoof = 0.2f;
+    charData.collisionElasticityFloor = 0.0f;
+
     for (int i = 0; i < 1; i++)
     {
         float x = Random::Float(-1.0f, 1.0f);
@@ -45,7 +54,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
         float vx = Random::Float(-1.0f, 1.0f);
         float vy = Random::Float(-1.0f, 1.0f);
 
-        if (!manager.addCharacter({ x, y }, { vx, vy }))
+        if (!manager.addCharacter({ x, y }, { vx, vy }, charData))
         {
             return -1;
         }

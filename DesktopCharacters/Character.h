@@ -8,26 +8,28 @@
 
 #include <vector>
 
-//struct MovementCharacteristics
-//{
-//    float maxSpeed;
-//    float maxJumpVelocity;
-//
-//    float collisionElasticitySides;
-//    float collisionElasticityRoof;
-//    float collisionElasticityFloor;
-//};
-
 // Character represents a desktop character entity
 class Character
 {
+public:
+    struct Data
+    {
+        float maxSpeed = 0.0f;
+        float maxJumpVelocity = 0.0f;
+
+        // TODO: Elasticity isn't movement-related, so rename class.
+        float collisionElasticitySides = 0.0f;
+        float collisionElasticityRoof = 0.0f;
+        float collisionElasticityFloor = 0.0f;
+    };
+private:
     Vec2 position;
     Vec2 size;
     Vec2 velocity;
 
     AABB aabb;
 
-    float elastcity = 0.0f;
+    Data data;
 
     bool collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle) const;
     float collisions(float deltaTime);
@@ -37,7 +39,7 @@ public:
 
     bool isBeingDragged = false;
 
-    Character(const Vec2& position, const Vec2& size);
+    Character(const Vec2& position, const Vec2& size, const Data& data);
     ~Character();
 
     //

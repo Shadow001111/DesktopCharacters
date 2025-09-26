@@ -102,19 +102,20 @@ float Character::collisions(float deltaTime)
         position += velocity * minimalTimeUntilCollision;
         if (isClosestObstacleHorizontal)
         {
-            velocity.y *= -elastcity;
+            float elasticity = signVelY > 0.0f ? data.collisionElasticityRoof : data.collisionElasticityFloor;
+            velocity.y *= -elasticity;
         }
         else
         {
-            velocity.x *= -elastcity;
+            velocity.x *= -data.collisionElasticitySides;
         }
         return deltaTime - minimalTimeUntilCollision; // Remaining time to process
     }
 }
 
 
-Character::Character(const Vec2& position, const Vec2& size)
-    : position(position), size(size), velocity()
+Character::Character(const Vec2& position, const Vec2& size, const Data& data)
+    : position(position), size(size), velocity(), data(data)
 {
 }
 

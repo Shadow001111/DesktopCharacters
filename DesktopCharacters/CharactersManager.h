@@ -18,7 +18,7 @@ public:
 
     bool initialize();
 
-    bool addCharacter(const Vec2& position, const Vec2& velocity);
+    bool addCharacter(const Vec2& position, const Vec2& velocity, const Character::Data& charData);
 
     int runLoop();
 private:
