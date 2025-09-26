@@ -3,13 +3,8 @@
 #include "Core/Random.h"
 
 #include <iostream>
-#include <fstream>
-#include <memory>
 
-#include <locale>
-#include <codecvt>
-
-void openConsole()
+static void openConsole()
 {
     // Create a new console
     AllocConsole();
@@ -68,4 +63,4 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     return result;
 }
 
-// TODO: MainWindow prevents taskbar from opening. After a Windows key gets pressed, everything works.
+// TODO: MainWindow prevents taskbar from opening.

@@ -1,12 +1,9 @@
 #pragma once
-#include <windows.h>
-#include <windowsx.h> // For GET_X_LPARAM, GET_Y_LPARAM
-
-#include <memory>
-#include <functional>
-#include <string>
-
 #include "BaseWindow.h"
+
+#include <windows.h>
+
+#include <string>
 
 // WindowsWindow inherits from BaseWindow
 class Windows_Window : public BaseWindow

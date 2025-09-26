@@ -1,7 +1,8 @@
 #include "Windows_Window.h"
 #include "Renderer/Windows_Renderer.h"
 
-#include <stdexcept>
+#include <windowsx.h> // For GET_X_LPARAM, GET_Y_LPARAM
+
 #include <iostream>
 #include <memory>
 
@@ -51,7 +52,7 @@ bool Windows_Window::createWindow(const InitWindowParams& params)
     DWORD style = params.frameless ? WS_POPUP : WS_OVERLAPPEDWINDOW;
 
     // Extended styles
-    DWORD exStyle = WS_EX_APPWINDOW;;
+    DWORD exStyle = WS_EX_APPWINDOW;
 
     // Apply topMost parameter
     if (params.topMost)
