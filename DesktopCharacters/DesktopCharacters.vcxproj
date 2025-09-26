@@ -132,6 +132,7 @@
     <ClCompile Include="Core\AABB.cpp" />
     <ClCompile Include="Core\Profiler.cpp" />
     <ClCompile Include="Core\Random.cpp" />
+    <ClCompile Include="Obstacle.cpp" />
     <ClCompile Include="Window\Renderer\BaseRenderer.cpp" />
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="CharactersManager.cpp" />
@@ -147,6 +148,7 @@
     <ClInclude Include="Core\Color.h" />
     <ClInclude Include="Core\Profiler.h" />
     <ClInclude Include="Core\Random.h" />
+    <ClInclude Include="Obstacle.h" />
     <ClInclude Include="Window\Renderer\BaseRenderer.h" />
     <ClInclude Include="PlatformInterface\BasePlatformInterface.h" />
     <ClInclude Include="Character.h" />

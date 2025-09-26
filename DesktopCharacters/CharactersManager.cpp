@@ -52,7 +52,7 @@ void splitObstacleByAABB(Obstacle& obstacle, const AABB& occluder)
     std::vector<Obstacle::Segment> newSegments;
 
     Obstacle::Segment occluderSegment;
-    if (obstacle.type == ObstacleType::Horizontal)
+    if (obstacle.type == Obstacle::Type::Horizontal)
     {
         if (obstacle.perpOffset < occluder.minY || obstacle.perpOffset > occluder.maxY)
         {
@@ -390,16 +390,16 @@ void CharactersManager::updateObstacles()
     // World
     {
         // Top
-        obstacles.emplace_back(ObstacleType::Horizontal, Character::worldSize.y, -Character::worldSize.x, Character::worldSize.x);
+        obstacles.emplace_back(Obstacle::Type::Horizontal, Character::worldSize.y, -Character::worldSize.x, Character::worldSize.x);
 
         // Bottom
-        obstacles.emplace_back(ObstacleType::Horizontal, -Character::worldSize.y, -Character::worldSize.x, Character::worldSize.x);
+        obstacles.emplace_back(Obstacle::Type::Horizontal, -Character::worldSize.y, -Character::worldSize.x, Character::worldSize.x);
 
         // Left
-        obstacles.emplace_back(ObstacleType::Vertical, -Character::worldSize.x, -Character::worldSize.y, Character::worldSize.y);
+        obstacles.emplace_back(Obstacle::Type::Vertical, -Character::worldSize.x, -Character::worldSize.y, Character::worldSize.y);
 
         // Right
-        obstacles.emplace_back(ObstacleType::Vertical, Character::worldSize.x, -Character::worldSize.y, Character::worldSize.y);
+        obstacles.emplace_back(Obstacle::Type::Vertical, Character::worldSize.x, -Character::worldSize.y, Character::worldSize.y);
     }
 
     // Windows
@@ -422,10 +422,10 @@ void CharactersManager::updateObstacles()
         AABB windowAABB = { leftTop.x, rightBottom.y, rightBottom.x, leftTop.y };
 
         // Create obstacles
-        Obstacle top(ObstacleType::Horizontal, leftTop.y, leftTop.x, rightBottom.x);
-        Obstacle bottom(ObstacleType::Horizontal, rightBottom.y, leftTop.x, rightBottom.x);
-        Obstacle left(ObstacleType::Vertical, leftTop.x, rightBottom.y, leftTop.y);
-        Obstacle right(ObstacleType::Vertical, rightBottom.x, rightBottom.y, leftTop.y);
+        Obstacle top(Obstacle::Type::Horizontal, leftTop.y, leftTop.x, rightBottom.x);
+        Obstacle bottom(Obstacle::Type::Horizontal, rightBottom.y, leftTop.x, rightBottom.x);
+        Obstacle left(Obstacle::Type::Vertical, leftTop.x, rightBottom.y, leftTop.y);
+        Obstacle right(Obstacle::Type::Vertical, rightBottom.x, rightBottom.y, leftTop.y);
 
         // Split
         for (const auto& occluder : occluders)
@@ -484,7 +484,7 @@ void CharactersManager::render()
         {
             Vec2 p1, p2;
 
-            if (obst.type == ObstacleType::Horizontal)
+            if (obst.type == Obstacle::Type::Horizontal)
             {
                 float obst_min = map(segment.min, -Character::worldSize.x, Character::worldSize.x, 0.0f, screenSize.x);
                 float obst_max = map(segment.max, -Character::worldSize.x, Character::worldSize.x, 0.0f, screenSize.x);

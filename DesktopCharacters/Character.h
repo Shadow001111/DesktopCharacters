@@ -4,36 +4,10 @@
 
 #include "Core/AABB.h"
 
+#include "Obstacle.h"
+
 #include <memory>
 #include <vector>
-
-enum class ObstacleType
-{
-    Horizontal, Vertical
-};
-
-struct Obstacle
-{
-    struct Segment
-    {
-        float min = 0.0f, max = 0.0f;
-
-        Segment() = default;
-        Segment(float min, float max);
-    };
-    ObstacleType type;
-    float perpOffset = 0.0f;
-    std::vector<Segment> segments;
-
-    Obstacle();
-    Obstacle(ObstacleType type, float perpOffset, float minX, float maxX);
-
-    Obstacle(const Obstacle& other) = default;
-    Obstacle& operator=(const Obstacle& other) = default;
-
-    Obstacle(Obstacle&& other) noexcept;
-    Obstacle& operator=(Obstacle&& other) noexcept;
-};
 
 struct CharacterMovementCharacteristics
 {
@@ -69,6 +43,10 @@ public:
     Character(const Vec2& position, const Vec2& size);
     ~Character();
 
+    //
+    void update(float deltaTime);
+
+    //
     void setPosition(float x, float y);
     void setPosition(const Vec2& newPosition);
 
@@ -78,11 +56,9 @@ public:
     void move(float deltaX, float deltaY);
     void move(const Vec2& delta);
 
+    // Getters
     const Vec2& getPosition();
     const Vec2& getSize();
     const Vec2& getVelocity();
-
-    void update(float deltaTime);
-
     const AABB& getAABB() const;
 };
