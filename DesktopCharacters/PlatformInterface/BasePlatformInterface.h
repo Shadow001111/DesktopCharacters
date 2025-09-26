@@ -22,6 +22,8 @@ class BasePlatformInterface
 public:
     virtual ~BasePlatformInterface() = default;
 
+    virtual void start() = 0;
+
     virtual bool getMouseButtonPressed(MouseButton button) const = 0;
     virtual void getGlobalMousePosition(int& x, int& y) const = 0;
 

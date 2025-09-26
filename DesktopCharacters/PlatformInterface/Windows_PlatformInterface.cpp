@@ -1,8 +1,8 @@
 #include "Windows_PlatformInterface.h"
 
 #include <windows.h>
-#include <unordered_set>
 
+#include <unordered_set>
 #include <iostream>
 
 struct Windows_WindowData
@@ -86,6 +86,11 @@ BOOL CALLBACK EnumWindowsCallback(HWND hwnd, LPARAM lParam)
     return TRUE;
 }
 
+
+void Windows_PlatformInterface::start()
+{
+    
+}
 
 bool Windows_PlatformInterface::getMouseButtonPressed(MouseButton button) const
 {

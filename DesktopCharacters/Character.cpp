@@ -107,7 +107,6 @@ bool Character::collisionAxisCheck(float axisMin, float axisMax, const Obstacle&
             return true;
         }
     }
-
     return false;
 }
 

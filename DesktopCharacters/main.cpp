@@ -1,5 +1,7 @@
 #include "CharactersManager.h"
 
+#include "Core/Random.h"
+
 #include <iostream>
 #include <fstream>
 #include <memory>
@@ -36,20 +38,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
     }
 
     // Create characters
-    if (!manager.addCharacter({-2, 0}, {1, 0}))
+    for (int i = 0; i < 1; i++)
     {
-        return -1;
-    }
+        float x = Random::Float(-1.0f, 1.0f);
+        float y = Random::Float(-1.0f, 1.0f);
+        float vx = Random::Float(-1.0f, 1.0f);
+        float vy = Random::Float(-1.0f, 1.0f);
 
-    /*if (!manager.addCharacter({ 0, 0 }, { 0, 0 }))
-    {
-        return -1;
+        if (!manager.addCharacter({ x, y }, { vx, vy }))
+        {
+            return -1;
+        }
     }
-
-    if (!manager.addCharacter({ 2, 1 }, { -1, 0 }))
-    {
-        return -1;
-    }*/
 
     // Run the message loop - manager will handle all windows
     int result = manager.runLoop();

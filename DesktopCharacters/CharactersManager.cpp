@@ -96,6 +96,7 @@ bool CharactersManager::initialize()
 {
     // Platform
     platformInterface = std::make_unique<PlatformInterfaceClass>();
+    platformInterface->start();
 
     int scrW = 0, scrH = 0;
     platformInterface->getScreenResolution(scrW, scrH);
@@ -323,9 +324,12 @@ void CharactersManager::update(float deltaTime)
     updateDragging(deltaTime);
 
     // Characters
-    for (auto& character : characters)
     {
-        character->update(deltaTime);
+        PROFILE_SCOPE("Update characters");
+        for (auto& character : characters)
+        {
+            character->update(deltaTime);
+        }
     }
 
     /*static float elapsed = 9999.0f;
