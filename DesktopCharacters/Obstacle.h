@@ -1,21 +1,22 @@
 #pragma once
+#include "Core/Range.h"
+
 #include <vector>
 
 struct Obstacle
 {
     enum class Type : char { Horizontal, Vertical };
 
-    struct Segment
+    /*struct Single
     {
-        float min = 0.0f, max = 0.0f;
-
-        Segment() = default;
-        Segment(float min, float max);
-    };
+        Type type;
+        float perpOffset;
+        Range segment;
+    };*/
 
     Type type;
     float perpOffset = 0.0f;
-    std::vector<Segment> segments;
+    std::vector<Range> segments;
 
     Obstacle();
     Obstacle(Type type, float perpOffset, float minX, float maxX);

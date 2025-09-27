@@ -5,7 +5,8 @@
 #include <vector>
 #include <limits>
 
-#undef max, min
+#undef max
+#undef min
 
 class Profiler
 {

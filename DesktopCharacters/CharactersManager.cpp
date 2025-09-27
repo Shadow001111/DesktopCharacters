@@ -22,7 +22,7 @@ std::wstring getSafeString(const std::wstring& original)
     return safe;
 }
 
-void splitSegment(const Obstacle::Segment& a, const Obstacle::Segment& b, std::vector<Obstacle::Segment>& result)
+void splitSegment(const Range& a, const Range& b, std::vector<Range>& result)
 {
     float left = fmaxf(a.min, b.min);
     float right = fminf(a.max, b.max);
@@ -49,9 +49,9 @@ void splitSegment(const Obstacle::Segment& a, const Obstacle::Segment& b, std::v
 
 void splitObstacleByAABB(Obstacle& obstacle, const AABB& occluder)
 {
-    std::vector<Obstacle::Segment> newSegments;
+    std::vector<Range> newSegments;
 
-    Obstacle::Segment occluderSegment;
+    Range occluderSegment;
     if (obstacle.type == Obstacle::Type::Horizontal)
     {
         if (obstacle.perpOffset < occluder.minY || obstacle.perpOffset > occluder.maxY)
@@ -146,17 +146,16 @@ int CharactersManager::runLoop()
     std::cout << "Click and drag characters to move them around!" << std::endl;
 
     MSG msg;
-    DWORD lastTime = GetTickCount64();
+    auto lastTime = GetTickCount64();
 
     float elapsed = 0.0f;
-    int frames = 0;
 
     while (!shouldExit)
     {
         Profiler::beginFrame();
 
         // Calculate delta time
-        DWORD currentTime = GetTickCount64();
+        auto currentTime = GetTickCount64();
         float deltaTime = (currentTime - lastTime) * 0.001f; // Convert to seconds
         lastTime = currentTime;
 
@@ -195,14 +194,13 @@ int CharactersManager::runLoop()
             PROFILE_SCOPE("After render");
             mainWindow->getRenderer()->afterRender();
         }
-        frames++;
 
         // Profiler
         if (elapsed >= 3.0f)
         {
             elapsed -= 3.0f;
 
-            Profiler::printProfileReport();
+            //Profiler::printProfileReport();
             Profiler::resetAllProfiles();
         }
 
@@ -257,6 +255,9 @@ void CharactersManager::update(float deltaTime)
 
     // Update dragging
     updateDragging(deltaTime);
+
+    // Pathfinder
+    pathfinder.buildAllPaths();
 
     // Update characters
     {
@@ -449,6 +450,7 @@ void CharactersManager::interactLeftMouse(const Vec2& mousePos)
     }
 }
 
+
 void CharactersManager::render()
 {
     // Characters
@@ -466,19 +468,7 @@ void CharactersManager::render()
         mainWindow->getRenderer()->drawRectangle(topLeft, rectSize, color);
     }
 
-    // Windows
-   /* for (const auto& data : windowsData)
-    {
-        Vec2 topLeft = { data.x, data.y };
-        Vec2 rectSize = { data.w, data.h };
-
-        Color color = { 1.0f, 1.0f, 0.0f, 1.0f };
-
-        mainWindow->getRenderer()->drawRectangle(topLeft, rectSize, color, 2.0f);
-    }*/
-
     // Obstacles
-    // Get color by obstacle ID
     for (const auto& obst : Character::obstacles)
     {
         for (const auto& segment : obst.segments)
@@ -513,6 +503,34 @@ void CharactersManager::render()
             Color color = { 0.0f, 0.0f, 1.0f, 1.0f };
 
             mainWindow->getRenderer()->drawLine(p1, p2, color, 5.0f);
+        }
+    }
+
+    // Pathfinder
+    for (const auto& nodeA : pathfinder.getNodes())
+    {
+        const Obstacle* obstA = nodeA.obstacle;
+        if (obstA->type != Obstacle::Type::Horizontal)
+        {
+            continue;
+        }
+
+        for (const auto& nodeB : nodeA.nextNodes)
+        {
+            const Obstacle* obstB = nodeB.node->obstacle;
+            if (obstB->type != Obstacle::Type::Horizontal)
+            {
+                continue;
+            }
+
+            const JumpPlan& jumpPlan = nodeB.jumpPlan;
+
+            Vec2 takeoffPosScreen = worldToScreen(jumpPlan.takeoff);
+            Vec2 landingPosScreen = worldToScreen(jumpPlan.landing);
+
+            Color color = { 1.0f, 0.0f, 0.0f, 1.0f };
+
+            mainWindow->getRenderer()->drawLine(takeoffPosScreen, landingPosScreen, color, 5.0f);
         }
     }
 }

@@ -18,8 +18,8 @@ Windows_Renderer::~Windows_Renderer()
 void Windows_Renderer::beforeRender()
 {
     createResources();
+
     renderTarget->BeginDraw();
-    
     renderTarget->Clear(D2D1::ColorF(0, 0, 0, 0));
 }
 

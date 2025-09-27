@@ -1,10 +1,5 @@
 #include "Obstacle.h"
 
-Obstacle::Segment::Segment(float min, float max) :
-    min(min), max(max)
-{
-}
-
 Obstacle::Obstacle() :
     type(Type::Horizontal)
 {
