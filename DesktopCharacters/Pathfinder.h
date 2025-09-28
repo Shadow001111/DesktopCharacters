@@ -5,7 +5,11 @@
 
 struct JumpPlan
 {
-	Vec2 delta, takeoff, landing;
+	Range takeoffRange;
+	float takeoffY;
+
+	Range landingRange;
+	float landingY;
 };
 
 class Pathfinder
@@ -21,11 +25,12 @@ class Pathfinder
 		};
 
 		const Obstacle* obstacle;
-		const Range* segment;
+		size_t segmentIndex;  // Index into obstacle->segments
 
 		std::vector<NextNode> nextNodes;
 
-		Node(const Obstacle* obstacle, const Range* segment);
+		Node(const Obstacle* obstacle, size_t segmentIndex);
+		const Range& getSegment() const;
 	};
 public:
 	void buildAllPaths();
@@ -34,6 +39,6 @@ public:
 private:
 	std::vector<Node> nodes;
 
-	JumpPlan computeJump(const Obstacle& obstA, const Obstacle& obstB) const;
+	JumpPlan computeJump(const Obstacle& obstA, const Range& segmentA, const Obstacle& obstB, const Range& segmentB) const;
 };
 

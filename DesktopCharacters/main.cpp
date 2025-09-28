@@ -44,7 +44,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
     charData.frictionFloor = 0.4f;
 
-    for (int i = 0; i < 0; i++)
+    for (int i = 0; i < 1; i++)
     {
         float x = Random::Float(-1.0f, 1.0f);
         float y = Random::Float(-1.0f, 1.0f);

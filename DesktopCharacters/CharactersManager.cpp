@@ -507,32 +507,27 @@ void CharactersManager::render()
     }
 
     // Pathfinder
-    for (const auto& nodeA : pathfinder.getNodes())
+    /*for (const auto& nodeA : pathfinder.getNodes())
     {
-        const Obstacle* obstA = nodeA.obstacle;
-        if (obstA->type != Obstacle::Type::Horizontal)
-        {
-            continue;
-        }
-
         for (const auto& nodeB : nodeA.nextNodes)
         {
-            const Obstacle* obstB = nodeB.node->obstacle;
-            if (obstB->type != Obstacle::Type::Horizontal)
-            {
-                continue;
-            }
-
             const JumpPlan& jumpPlan = nodeB.jumpPlan;
 
-            Vec2 takeoffPosScreen = worldToScreen(jumpPlan.takeoff);
-            Vec2 landingPosScreen = worldToScreen(jumpPlan.landing);
+            Vec2 takeoff1 = worldToScreen({ jumpPlan.takeoffRange.min, jumpPlan.takeoffY });
+            Vec2 takeoff2 = worldToScreen({ jumpPlan.takeoffRange.max, jumpPlan.takeoffY });
 
-            Color color = { 1.0f, 0.0f, 0.0f, 1.0f };
+            Vec2 landing1 = worldToScreen({ jumpPlan.landingRange.min, jumpPlan.landingY });
+            Vec2 landing2 = worldToScreen({ jumpPlan.landingRange.max, jumpPlan.landingY });
 
-            mainWindow->getRenderer()->drawLine(takeoffPosScreen, landingPosScreen, color, 5.0f);
+            Color color = { 1.0f, 0.0f, 0.0f, 0.5f };
+
+            mainWindow->getRenderer()->drawLine(takeoff1, landing1, color, 5.0f);
+            if (jumpPlan.takeoffRange.min != jumpPlan.takeoffRange.max)
+            {
+                mainWindow->getRenderer()->drawLine(takeoff2, landing2, color, 5.0f);
+            }
         }
-    }
+    }*/
 }
 
 

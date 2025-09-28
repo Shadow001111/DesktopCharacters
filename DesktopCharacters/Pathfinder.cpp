@@ -6,45 +6,44 @@
 void Pathfinder::buildAllPaths()
 {
 	const auto& obstacles = Character::obstacles;
-	size_t obstaclesCount = obstacles.size();
 
-	//
+	// Build nodes for each segment of each obstacle
 	nodes.clear();
-	for (size_t i = 0; i < obstaclesCount; i++)
+	for (const Obstacle& obstacle : obstacles)
 	{
-		const Obstacle* obstacle = &obstacles[i];
-		const Range* segment = &obstacle->segments[0];
-		
-		nodes.emplace_back(obstacle, segment);
+		// Create a node for each segment
+		for (size_t segIdx = 0; segIdx < obstacle.segments.size(); segIdx++)
+		{
+			nodes.emplace_back(&obstacle, segIdx);
+		}
 	}
 
-	//
-	for (size_t i = 0; i < obstaclesCount; i++)
+	// Build connections between horizontal platform segments
+	for (auto& nodeA : nodes)
 	{
-		const auto& obstacleA = obstacles[i];
-		if (obstacleA.type != Obstacle::Type::Horizontal || obstacleA.segments.size() != 1)
+		// Only consider horizontal platforms for jumping
+		if (nodeA.obstacle->type != Obstacle::Type::Horizontal)
 		{
 			continue;
 		}
-		Node* nodeA = &nodes[i];
 
-		for (size_t j = 0; j < obstaclesCount; j++)
+		for (auto& nodeB : nodes)
 		{
-			if (i == j)
+			if (&nodeA == &nodeB) // Don't connect to self
 			{
 				continue;
 			}
 
-			const auto& obstacleB = obstacles[j];
-			if (obstacleB.type != Obstacle::Type::Horizontal || obstacleB.segments.size() != 1)
+			// Only connect to other horizontal platforms
+			if (nodeB.obstacle->type != Obstacle::Type::Horizontal)
 			{
 				continue;
 			}
-			Node* nodeB = &nodes[j];
 
-			JumpPlan jumpPlan = computeJump(obstacleA, obstacleB);
+			JumpPlan jumpPlan = computeJump(*nodeA.obstacle, nodeA.getSegment(),
+				*nodeB.obstacle, nodeB.getSegment());
 
-			nodeA->nextNodes.emplace_back(nodeB, jumpPlan);
+			nodeA.nextNodes.emplace_back(&nodeB, jumpPlan);
 		}
 	}
 }
@@ -54,53 +53,55 @@ const std::vector<Pathfinder::Node>& Pathfinder::getNodes() const
 	return nodes;
 }
 
-JumpPlan Pathfinder::computeJump(const Obstacle& obstA, const Obstacle& obstB) const
+JumpPlan Pathfinder::computeJump(const Obstacle& obstA, const Range& segmentA, const Obstacle& obstB, const Range& segmentB) const
 {
-	Range rangeA = obstA.segments[0];
-	Range rangeB = obstB.segments[0];
-
-	float landingX;
-	if (rangeB.min > rangeA.max)
+	Range landingRange;
+	if (segmentB.min > segmentA.max)
 	{
-		landingX = rangeB.min;
+		landingRange = { segmentB.min, segmentB.min };
 	}
-	else if (rangeB.max < rangeA.min)
+	else if (segmentB.max < segmentA.min)
 	{
-		landingX = rangeB.max;
+		landingRange = { segmentB.max, segmentB.max };
 	}
 	else
 	{
-		// overlap in horizontal range
-		landingX = fmaxf(rangeA.min, rangeB.min);
+		landingRange = { fmaxf(segmentA.min, segmentB.min), fminf(segmentA.max, segmentB.max) };
 	}
 
-	float takeoffX;
-	if (landingX < rangeA.min)
+	Range takeoffRange;
+	if (landingRange.max < segmentA.min)
 	{
-		takeoffX = rangeA.min;
+		takeoffRange = { segmentA.min, segmentA.min };
 	}
-	else if (landingX > rangeA.max)
+	else if (landingRange.min > segmentA.max)
 	{
-		takeoffX = rangeA.max;
+		takeoffRange = { segmentA.max, segmentA.max };
 	}
 	else
 	{
-		takeoffX = landingX; // vertical jump if ranges overlap
+		takeoffRange = landingRange; // vertical jump if ranges overlap
 	}
-
-	float dx = landingX - takeoffX;
-	float dy = obstB.perpOffset - obstA.perpOffset;
 
 	JumpPlan jumpPlan;
-	jumpPlan.delta = { dx, dy };
-	jumpPlan.takeoff = { takeoffX, obstA.perpOffset };
-	jumpPlan.landing = { landingX, obstB.perpOffset };
+
+	jumpPlan.takeoffRange = takeoffRange;
+	jumpPlan.takeoffY = obstA.perpOffset;
+
+	jumpPlan.landingRange = landingRange;
+	jumpPlan.landingY = obstB.perpOffset;
+
 	return jumpPlan;
 }
 
-Pathfinder::Node::Node(const Obstacle* obstacle, const Range* segment) :
-	obstacle(obstacle), segment(segment)
+Pathfinder::Node::Node(const Obstacle* obstacle, size_t segmentIndex) :
+	obstacle(obstacle), segmentIndex(segmentIndex)
 {
+}
+
+const Range& Pathfinder::Node::getSegment() const
+{
+	return obstacle->segments[segmentIndex];
 }
 
 Pathfinder::Node::NextNode::NextNode(const Node* node, const JumpPlan& jumpPlan) :
