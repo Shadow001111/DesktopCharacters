@@ -256,9 +256,6 @@ void CharactersManager::update(float deltaTime)
     // Update dragging
     updateDragging(deltaTime);
 
-    // Pathfinder
-    pathfinder.buildAllPaths();
-
     // Update characters
     {
         int mX, mY;

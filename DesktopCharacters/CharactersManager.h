@@ -5,7 +5,6 @@ using WindowClass = Windows_Window;
 #include "PlatformInterface/Windows_PlatformInterface.h"
 using PlatformInterfaceClass = Windows_PlatformInterface;
 
-#include "Pathfinder.h"
 #include "Character.h"
 
 #include <vector>
@@ -33,9 +32,6 @@ private:
 
     // Windows' data
     std::vector<WindowData> windowsData;
-
-    // Pathfinder
-    Pathfinder pathfinder;
 
     // Characters
     std::vector<std::unique_ptr<Character>> characters;

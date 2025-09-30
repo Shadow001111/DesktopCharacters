@@ -139,7 +139,6 @@
     <ClCompile Include="Core\Profiler.cpp" />
     <ClCompile Include="Core\Random.cpp" />
     <ClCompile Include="Obstacle.cpp" />
-    <ClCompile Include="Pathfinder.cpp" />
     <ClCompile Include="Core\Range.cpp" />
     <ClCompile Include="Window\Renderer\BaseRenderer.cpp" />
     <ClCompile Include="Character.cpp" />
@@ -157,7 +156,6 @@
     <ClInclude Include="Core\Profiler.h" />
     <ClInclude Include="Core\Random.h" />
     <ClInclude Include="Obstacle.h" />
-    <ClInclude Include="Pathfinder.h" />
     <ClInclude Include="Core\Range.h" />
     <ClInclude Include="Window\Renderer\BaseRenderer.h" />
     <ClInclude Include="PlatformInterface\BasePlatformInterface.h" />
