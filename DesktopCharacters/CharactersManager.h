@@ -10,6 +10,13 @@ using PlatformInterfaceClass = Windows_PlatformInterface;
 #include <vector>
 #include <memory>
 
+struct InGameWindowData
+{
+    WindowData data;
+    Vec2 velocity;
+    Vec2 lastPosition;
+};
+
 class CharactersManager
 {
 public:
@@ -32,6 +39,7 @@ private:
 
     // Windows' data
     std::vector<WindowData> windowsData;
+    std::vector<InGameWindowData> inGameWindowsData;
 
     // Characters
     std::vector<std::unique_ptr<Character>> characters;
@@ -48,7 +56,7 @@ private:
     std::vector<DragSample> dragHistory;
     const float dragHistoryDuration = 0.1f; // track last 0.1 seconds for velocity
 private:
-    void collectWindowsData();
+    void collectWindowsData(float deltaTime);
     void removeContainedWindows();
 
     void update(float deltaTime);

@@ -65,4 +65,3 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 
 // TODO: MainWindow prevents taskbar from opening.
 // TODO: Can drag character out of screen
-// TODO: Make fixed updates

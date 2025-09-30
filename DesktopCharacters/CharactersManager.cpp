@@ -1,8 +1,6 @@
 #include "CharactersManager.h"
 
 #include <iostream>
-#include <algorithm>
-#include <sstream>
 
 #include "Core/Profiler.h"
 
@@ -148,7 +146,10 @@ int CharactersManager::runLoop()
     MSG msg;
     auto lastTime = GetTickCount64();
 
-    float elapsed = 0.0f;
+    float updatesCounter = 0.0f;
+    float profilerCounter = 0.0f;
+
+    float updatePeriod = 1.0f / 60.0f;
 
     while (!shouldExit)
     {
@@ -159,7 +160,8 @@ int CharactersManager::runLoop()
         float deltaTime = (currentTime - lastTime) * 0.001f; // Convert to seconds
         lastTime = currentTime;
 
-        elapsed += deltaTime;
+        updatesCounter += deltaTime;
+        profilerCounter += deltaTime;
 
         // Check for messages
         {
@@ -180,7 +182,11 @@ int CharactersManager::runLoop()
         }
 
         // Updates
-        update(deltaTime);
+        while (updatesCounter > updatePeriod)
+        {
+            update(updatePeriod);
+            updatesCounter -= updatePeriod;
+        }
 
         {
             PROFILE_SCOPE("Before render");
@@ -196,11 +202,11 @@ int CharactersManager::runLoop()
         }
 
         // Profiler
-        if (elapsed >= 3.0f)
+        if (profilerCounter >= 3.0f)
         {
-            elapsed -= 3.0f;
+            profilerCounter -= 3.0f;
 
-            //Profiler::printProfileReport();
+            Profiler::printProfileReport();
             Profiler::resetAllProfiles();
         }
 
@@ -211,12 +217,58 @@ int CharactersManager::runLoop()
 }
 
 
-void CharactersManager::collectWindowsData()
+void CharactersManager::collectWindowsData(float deltaTime)
 {
-    PROFILE_FUNCTION();
+    {
+        PROFILE_SCOPE("Collect windows data");
 
-    windowsData.clear();
-    platformInterface->getWindowsDataForCharacters(windowsData);
+        windowsData.clear();
+        platformInterface->getWindows(windowsData);
+    }
+    {
+        // TODO: Remove data that is closed window
+        PROFILE_SCOPE("Collect in-game windows data");
+
+        std::unordered_map<size_t, size_t> windowMap;
+        for (size_t i = 0; i < inGameWindowsData.size(); i++)
+        {
+            auto key = inGameWindowsData[i].data.id;
+            windowMap[key] = i;
+        }
+
+        std::vector<InGameWindowData> newInGameWindowsData;
+        newInGameWindowsData.reserve(windowsData.size());
+
+        for (auto& newData : windowsData)
+        {
+            auto key = newData.id;
+            auto it = windowMap.find(key);
+
+            InGameWindowData cached;
+            cached.data = newData;
+
+            if (it != windowMap.end())
+            {
+                // Window exists, calculate velocity
+                const auto& oldCached = inGameWindowsData[it->second];
+                Vec2 oldPos(oldCached.data.x, oldCached.data.y);
+                Vec2 newPos(newData.x, newData.y);
+
+                cached.velocity = (newPos - oldPos) / deltaTime;
+                cached.lastPosition = newPos;
+            }
+            else
+            {
+                // New window
+                cached.velocity = Vec2(0.0f, 0.0f);
+                cached.lastPosition = Vec2(newData.x, newData.y);
+            }
+
+            newInGameWindowsData.push_back(cached);
+        }
+
+        inGameWindowsData = std::move(newInGameWindowsData);
+    }
 }
 
 void CharactersManager::removeContainedWindows()
@@ -247,7 +299,7 @@ void CharactersManager::removeContainedWindows()
 void CharactersManager::update(float deltaTime)
 {
     // Collect windows data
-    collectWindowsData();
+    collectWindowsData(deltaTime);
     removeContainedWindows();
 
     // Update obstacles
@@ -274,22 +326,6 @@ void CharactersManager::update(float deltaTime)
             character->update(deltaTime);
         }
     }
-
-    /*static float elapsed = 9999.0f;
-    elapsed += deltaTime;
-    if (elapsed >= 2.0f)
-    {
-        elapsed = 0.0f;
-
-        std::cout << "-----------------------------\n";
-        for (const auto& data : windowsData)
-        {
-            auto safeTitle = getSafeString(data.title);
-            auto safeClassName = getSafeString(data.className);
-            std::wcout << safeTitle << " | " << safeClassName << L"\n";
-        }
-        std::cout << "-----------------------------" << std::endl;
-    }*/
 }
 
 void CharactersManager::updateObstacles()
@@ -502,29 +538,6 @@ void CharactersManager::render()
             mainWindow->getRenderer()->drawLine(p1, p2, color, 5.0f);
         }
     }
-
-    // Pathfinder
-    /*for (const auto& nodeA : pathfinder.getNodes())
-    {
-        for (const auto& nodeB : nodeA.nextNodes)
-        {
-            const JumpPlan& jumpPlan = nodeB.jumpPlan;
-
-            Vec2 takeoff1 = worldToScreen({ jumpPlan.takeoffRange.min, jumpPlan.takeoffY });
-            Vec2 takeoff2 = worldToScreen({ jumpPlan.takeoffRange.max, jumpPlan.takeoffY });
-
-            Vec2 landing1 = worldToScreen({ jumpPlan.landingRange.min, jumpPlan.landingY });
-            Vec2 landing2 = worldToScreen({ jumpPlan.landingRange.max, jumpPlan.landingY });
-
-            Color color = { 1.0f, 0.0f, 0.0f, 0.5f };
-
-            mainWindow->getRenderer()->drawLine(takeoff1, landing1, color, 5.0f);
-            if (jumpPlan.takeoffRange.min != jumpPlan.takeoffRange.max)
-            {
-                mainWindow->getRenderer()->drawLine(takeoff2, landing2, color, 5.0f);
-            }
-        }
-    }*/
 }
 
 

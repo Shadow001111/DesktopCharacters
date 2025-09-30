@@ -14,3 +14,8 @@ void BaseRenderer::drawLine(const Vec2& start, const Vec2& end, const Color& col
 {
 	drawLine(start.x, start.y, end.x, end.y, color, strokeWidth);
 }
+
+void BaseRenderer::drawText(const std::wstring& text, const Vec2& position, const Vec2& size, const Color& color)
+{
+	drawText(text, position.x, position.y, size.x, size.y, color);
+}

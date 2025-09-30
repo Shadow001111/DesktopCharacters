@@ -1,17 +1,42 @@
 #include "Windows_Renderer.h"
 
 #include <stdexcept>
-#include <iostream>
 
-Windows_Renderer::Windows_Renderer(HWND hwnd)
-    : hwnd(hwnd), factory(nullptr), renderTarget(nullptr)
+Windows_Renderer::Windows_Renderer(HWND hwnd) :
+    hwnd(hwnd), factory(nullptr), renderTarget(nullptr),
+    dwriteFactory(nullptr), textFormat(nullptr)
 {
+    // Direct 2D
     D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &factory);
+
+    // DirectWrite
+    DWriteCreateFactory(
+        DWRITE_FACTORY_TYPE_SHARED,
+        __uuidof(IDWriteFactory),
+        reinterpret_cast<IUnknown**>(&dwriteFactory)
+    );
+
+    // Default text format
+    if (dwriteFactory)
+    {
+        dwriteFactory->CreateTextFormat(
+            L"Segoe UI",                // Font family
+            nullptr,                    // Font collection
+            DWRITE_FONT_WEIGHT_NORMAL,
+            DWRITE_FONT_STYLE_NORMAL,
+            DWRITE_FONT_STRETCH_NORMAL,
+            48.0f,                      // Font size
+            L"en-us",                   // Locale
+            &textFormat
+        );
+    }
 }
 
 Windows_Renderer::~Windows_Renderer()
 {
     discardResources();
+    if (textFormat) textFormat->Release();
+    if (dwriteFactory) dwriteFactory->Release();
     if (factory) factory->Release();
 }
 
@@ -143,5 +168,22 @@ void Windows_Renderer::drawLine(float x1, float y1, float x2, float y2, const Co
         D2D1::Point2F(x2, y2),
         brush,
         strokeWidth
+    );
+}
+
+void Windows_Renderer::drawText(const std::wstring& text, float x, float y, float w, float h, const Color& color)
+{
+    if (!renderTarget || !brush || !textFormat) return;
+
+    brush->SetColor({ color.r, color.g, color.b, color.a });
+
+    D2D1_RECT_F layoutRect = D2D1::RectF(x, y, x + w, y + h);
+
+    renderTarget->DrawTextW(
+        text.c_str(),
+        static_cast<UINT32>(text.length()),
+        textFormat,
+        &layoutRect,
+        brush
     );
 }

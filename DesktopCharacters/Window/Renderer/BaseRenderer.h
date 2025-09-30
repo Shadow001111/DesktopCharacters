@@ -2,6 +2,8 @@
 #include "Core/Color.h"
 #include "Core/Vec2.h"
 
+#include <string>
+
 class BaseRenderer
 {
 public:
@@ -19,5 +21,9 @@ public:
 
 	virtual void drawLine(float x1, float y1, float x2, float y2, const Color& color, float strokeWidth = 2.0f) = 0;
 	void drawLine(const Vec2& start, const Vec2& end, const Color& color, float strokeWidth = 2.0f);
+
+	// Text
+	virtual void drawText(const std::wstring& text, float x, float y, float w, float h, const Color& color) = 0;
+	void drawText(const std::wstring& text, const Vec2& position, const Vec2& size, const Color& color);
 };
 

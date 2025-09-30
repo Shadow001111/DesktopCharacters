@@ -100,6 +100,9 @@ void Profiler::resetAllProfiles()
 
 void Profiler::printProfileReport()
 {
+    std::ios oldState(nullptr);
+    oldState.copyfmt(std::cout);
+
     std::cout << "\n=== PERFORMANCE PROFILE REPORT ===\n";
     std::cout << std::fixed << std::setprecision(4);
     std::cout << std::left;
@@ -183,6 +186,8 @@ void Profiler::printProfileReport()
     }
 
     std::cout << std::string(100, '=') << std::endl;
+
+    std::cout.copyfmt(oldState);
 }
 
 ScopedProfiler::ScopedProfiler(const std::string& profileName) : name(profileName)

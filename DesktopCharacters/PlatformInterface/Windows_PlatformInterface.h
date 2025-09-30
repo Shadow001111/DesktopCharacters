@@ -11,6 +11,6 @@ public:
 
     void getScreenResolution(int& w, int& h) const override;
 
-    void getWindowsDataForCharacters(std::vector<WindowData>& result) const override;
+    void getWindows(std::vector<WindowData>& result) const override;
 };
 

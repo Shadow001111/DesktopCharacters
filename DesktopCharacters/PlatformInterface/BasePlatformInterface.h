@@ -1,5 +1,4 @@
 #include <vector>
-#include <functional>
 #include <string>
 
 enum class MouseButton
@@ -11,10 +10,15 @@ enum class MouseButton
 
 struct WindowData
 {
+    size_t id = 0;
     std::wstring title;
     std::wstring className;
-    int x, y, w, h;
-    int zOrder;
+    int x = 0, y = 0, w = 0, h = 0;
+    int zOrder = 0;
+
+    WindowData() = default;
+    WindowData(size_t id, const std::wstring& title, const std::wstring& className, int x, int y, int w, int h, int zOrder);
+    WindowData(size_t id, std::wstring&& title, std::wstring&& className, int x, int y, int w, int h, int zOrder);
 };
 
 class BasePlatformInterface
@@ -29,5 +33,5 @@ public:
 
     virtual void getScreenResolution(int& w, int& h) const = 0;
     
-    virtual void getWindowsDataForCharacters(std::vector<WindowData>& result) const = 0;
+    virtual void getWindows(std::vector<WindowData>& result) const = 0;
 };

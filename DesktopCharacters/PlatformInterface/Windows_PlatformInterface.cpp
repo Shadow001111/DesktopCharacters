@@ -5,15 +5,6 @@
 #include <unordered_set>
 #include <iostream>
 
-struct Windows_WindowData
-{
-    HWND hwnd;
-    std::wstring title;
-    std::wstring className;
-    RECT rect;
-    int zOrder;
-};
-
 const std::unordered_set<std::wstring> BANNED_CLASS_NAMES =
 {
     L"DesktopCharacters_Shadow001111",
@@ -21,8 +12,9 @@ const std::unordered_set<std::wstring> BANNED_CLASS_NAMES =
     L"ApplicationFrameWindow"
 };
 
-static std::vector<Windows_WindowData> globalTempWindowsWindowsData;
+static wchar_t wcharBuffer[256];
 static int g_orderCounter = 0;
+static std::vector<WindowData>* windowDataCollectionVector = nullptr;
 
 BOOL CALLBACK EnumWindowsCallback(HWND hwnd, LPARAM lParam)
 {
@@ -59,29 +51,30 @@ BOOL CALLBACK EnumWindowsCallback(HWND hwnd, LPARAM lParam)
         return TRUE;
 
     // Get title
-    wchar_t title[512];
-    GetWindowTextW(hwnd, title, 512);
-    std::wstring wtitle = title;
+    GetWindowTextW(hwnd, wcharBuffer, 256);
+    std::wstring wtitle = wcharBuffer;
     if (wtitle.empty())
         return TRUE;
 
     // Get class name
-    wchar_t className[256];
-    GetClassNameW(hwnd, className, 256);
-    std::wstring wclassName = className;
+    GetClassNameW(hwnd, wcharBuffer, 256);
+    std::wstring wclassName = wcharBuffer;
 
     if (BANNED_CLASS_NAMES.find(wclassName) != BANNED_CLASS_NAMES.end())
         return TRUE;
 
     // Construct WindowData
-    Windows_WindowData wd;
-    wd.hwnd = hwnd;
-    wd.title = wtitle;
-    wd.className = wclassName;
-    wd.rect = rect;
-    wd.zOrder = g_orderCounter++;
-
-    globalTempWindowsWindowsData.push_back(wd);
+    windowDataCollectionVector->emplace_back
+    (
+        (size_t)hwnd,
+        std::move(wtitle),
+        std::move(wclassName),
+        rect.left,
+        rect.top,
+        width,
+        height,
+        g_orderCounter++
+    );
 
     return TRUE;
 }
@@ -129,23 +122,9 @@ void Windows_PlatformInterface::getScreenResolution(int& w, int& h) const
     h = GetSystemMetrics(SM_CYSCREEN);
 }
 
-void Windows_PlatformInterface::getWindowsDataForCharacters(std::vector<WindowData>& result) const
+void Windows_PlatformInterface::getWindows(std::vector<WindowData>& result) const
 {
-    globalTempWindowsWindowsData.clear();
     g_orderCounter = 0;
+    windowDataCollectionVector = &result;
     EnumWindows(EnumWindowsCallback, 0);
-
-    result.reserve(result.size() + globalTempWindowsWindowsData.size());
-    for (const auto& wd : globalTempWindowsWindowsData)
-    {
-        WindowData data;
-        data.title = wd.title;
-        data.className = wd.className;
-        data.x = wd.rect.left;
-        data.y = wd.rect.top;
-        data.w = wd.rect.right - wd.rect.left;
-        data.h = wd.rect.bottom - wd.rect.top;
-        data.zOrder = wd.zOrder;
-        result.push_back(data);
-    }
 }
