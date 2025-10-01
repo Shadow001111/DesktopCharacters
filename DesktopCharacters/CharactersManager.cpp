@@ -239,7 +239,7 @@ void CharactersManager::collectWindowsData(float deltaTime)
         std::vector<InGameWindowData> newInGameWindowsData;
         newInGameWindowsData.reserve(windowsData.size());
 
-        for (auto& newData : windowsData)
+        for (const WindowData& newData : windowsData)
         {
             auto key = newData.id;
             auto it = windowMap.find(key);
@@ -247,22 +247,40 @@ void CharactersManager::collectWindowsData(float deltaTime)
             InGameWindowData cached;
             cached.data = newData;
 
+            Vec2 newPosition;
+            {
+                Vec2 leftTop_screen = { cached.data.x, cached.data.y };
+                Vec2 rectSize_screen = { cached.data.w, cached.data.h };
+                Vec2 rightBottom_screen = leftTop_screen + rectSize_screen;
+
+                Vec2 leftTop = screenToWorld(leftTop_screen);
+                Vec2 rightBottom = screenToWorld(rightBottom_screen);
+
+                cached.aabb.minX = leftTop.x;
+                cached.aabb.minY = rightBottom.y;
+                cached.aabb.maxX = rightBottom.x;
+                cached.aabb.maxY = leftTop.y;
+
+                newPosition = { cached.aabb.minX, cached.aabb.minY };
+            }
+            
+            cached.occluded = false;
+
             if (it != windowMap.end())
             {
                 // Window exists, calculate velocity
                 const auto& oldCached = inGameWindowsData[it->second];
-                Vec2 oldPos(oldCached.data.x, oldCached.data.y);
-                Vec2 newPos(newData.x, newData.y);
+                Vec2 oldPos = { oldCached.aabb.minX, oldCached.aabb.maxX };
 
-                cached.velocity = (newPos - oldPos) / deltaTime;
-                cached.lastPosition = newPos;
+                cached.velocity = (newPosition - oldPos) / deltaTime;
             }
             else
             {
                 // New window
                 cached.velocity = Vec2(0.0f, 0.0f);
-                cached.lastPosition = Vec2(newData.x, newData.y);
             }
+
+            cached.lastPosition = newPosition;
 
             newInGameWindowsData.push_back(cached);
         }
@@ -271,26 +289,23 @@ void CharactersManager::collectWindowsData(float deltaTime)
     }
 }
 
-void CharactersManager::removeContainedWindows()
+void CharactersManager::occludeInGameWindows()
 {
     PROFILE_FUNCTION();
 
-    if (windowsData.empty())
+    if (inGameWindowsData.empty())
     {
         return;
     }
 
-    for (size_t i = 0; i + 1 < windowsData.size(); i++)
+    size_t count = inGameWindowsData.size();
+    for (size_t i = 0; i + 1 < count; i++)
     {
-        const auto& outer = windowsData[i];
-        const auto& inner = windowsData[i + 1];
-
-        bool contains = inner.x >= outer.x && (inner.x + inner.w) <= (outer.x + outer.w) &&
-            inner.y >= outer.y && (inner.y + inner.h) <= (outer.y + outer.h);
-
-        if (contains)
+        const auto& outer = inGameWindowsData[i];
+        for (size_t j = i + 1; j < count; j++)
         {
-            windowsData.erase(windowsData.begin() + i + 1);
+            auto& inner = inGameWindowsData[i + 1];
+            inner.occluded |= outer.aabb.isContaining(inner.aabb);
         }
     }
 }
@@ -300,7 +315,7 @@ void CharactersManager::update(float deltaTime)
 {
     // Collect windows data
     collectWindowsData(deltaTime);
-    removeContainedWindows();
+    occludeInGameWindows();
 
     // Update obstacles
     updateObstacles();
@@ -331,6 +346,7 @@ void CharactersManager::update(float deltaTime)
 void CharactersManager::updateObstacles()
 {
     PROFILE_FUNCTION();
+
     auto& obstacles = Character::obstacles;
     obstacles.clear();
 
@@ -350,29 +366,27 @@ void CharactersManager::updateObstacles()
     }
 
     // Windows
-    // TODO: Add constructor and move semantics for Obstacle
-    size_t windowsCount = windowsData.size();
-
     std::vector<AABB> occluders;
-
-    for (size_t i = 0; i < windowsCount; i++)
+    occluders.reserve(inGameWindowsData.size());
+    for (const auto& window : inGameWindowsData)
     {
-        const auto& data = windowsData[i];
+        if (window.occluded)
+        {
+            continue;
+        }
 
-        Vec2 leftTop_screen = { data.x, data.y };
-        Vec2 rectSize_screen = { data.w, data.h };
-        Vec2 rightBottom_screen = leftTop_screen + rectSize_screen;
-
-        Vec2 leftTop = screenToWorld(leftTop_screen);
-        Vec2 rightBottom = screenToWorld(rightBottom_screen);
-
-        AABB windowAABB = { leftTop.x, rightBottom.y, rightBottom.x, leftTop.y };
+        const AABB& windowAABB = window.aabb;
 
         // Create obstacles
-        Obstacle top(Obstacle::Type::Horizontal, leftTop.y, leftTop.x, rightBottom.x);
-        Obstacle bottom(Obstacle::Type::Horizontal, rightBottom.y, leftTop.x, rightBottom.x);
-        Obstacle left(Obstacle::Type::Vertical, leftTop.x, rightBottom.y, leftTop.y);
-        Obstacle right(Obstacle::Type::Vertical, rightBottom.x, rightBottom.y, leftTop.y);
+        Obstacle top(Obstacle::Type::Horizontal, windowAABB.maxY, windowAABB.minX, windowAABB.maxX);
+        Obstacle bottom(Obstacle::Type::Horizontal, windowAABB.minY, windowAABB.minX, windowAABB.maxX);
+        Obstacle left(Obstacle::Type::Vertical, windowAABB.minX, windowAABB.minY, windowAABB.maxY);
+        Obstacle right(Obstacle::Type::Vertical, windowAABB.maxX, windowAABB.minY, windowAABB.maxY);
+
+        top.velocity = window.velocity;
+        bottom.velocity = window.velocity;
+        left.velocity = window.velocity;
+        right.velocity = window.velocity;
 
         // Split
         for (const auto& occluder : occluders)
@@ -385,6 +399,8 @@ void CharactersManager::updateObstacles()
                 splitObstacleByAABB(right, occluder);
             }
         }
+
+        // Add segments
         if (!top.segments.empty()) obstacles.push_back(std::move(top));
         if (!bottom.segments.empty()) obstacles.push_back(std::move(bottom));
         if (!left.segments.empty()) obstacles.push_back(std::move(left));
@@ -543,7 +559,11 @@ void CharactersManager::render()
 
 float CharactersManager::map(float value, float min1, float max1, float min2, float max2) const
 {
-    float normalized = (value - min1) / (max1 - min1);
+    float range = max1 - min1;
+    if (fabsf(range) < 1e-6f) // Avoid division by zero
+        return min2;
+
+    float normalized = (value - min1) / range;
     return min2 + normalized * (max2 - min2);
 }
 

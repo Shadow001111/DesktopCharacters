@@ -1,5 +1,6 @@
 #pragma once
 #include "Core/Range.h"
+#include "Core/Vec2.h"
 
 #include <vector>
 
@@ -17,6 +18,7 @@ struct Obstacle
     Type type;
     float perpOffset = 0.0f;
     std::vector<Range> segments;
+    Vec2 velocity = { 0.0f, 0.0f };
 
     Obstacle();
     Obstacle(Type type, float perpOffset, float minX, float maxX);

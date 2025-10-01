@@ -24,3 +24,8 @@ bool AABB::isContaining(const Vec2& point) const
 {
 	return minX <= point.x && point.x <= maxX && minY <= point.y && point.y <= maxY;
 }
+
+bool AABB::isContaining(const AABB& inner) const
+{
+	return inner.minX >= minX && inner.maxX <= maxX && inner.minY >= minY && inner.maxY <= maxY;
+}

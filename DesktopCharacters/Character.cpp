@@ -6,8 +6,9 @@ Vec2 Character::worldSize;   // The logical world size for physics
 std::vector<Obstacle> Character::obstacles;
 
 // Checks overlap between a character's axis range and obstacle segments
-bool Character::collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle) const
+bool Character::collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle, size_t& returnSegmentIndex) const
 {
+    returnSegmentIndex = 0;
     for (const auto& segment : obstacle.segments)
     {
         float obstX1 = segment.min;
@@ -17,6 +18,8 @@ bool Character::collisionAxisCheck(float axisMin, float axisMax, const Obstacle&
         {
             return true;
         }
+
+        returnSegmentIndex++;
     }
     return false;
 }
@@ -26,7 +29,8 @@ bool Character::collisionAxisCheck(float axisMin, float axisMax, const Obstacle&
 float Character::collisions(float deltaTime)
 {
     float minimalTimeUntilCollision = FLT_MAX;
-    bool isClosestObstacleHorizontal = false;
+    const Obstacle* closestObstacle = nullptr;
+    size_t closestSegmentIndex = 0;
 
     const Vec2 halfSize = size * 0.5f;
 
@@ -46,6 +50,8 @@ float Character::collisions(float deltaTime)
     
     for (const auto& obstacle : obstacles)
     {
+        size_t segmentIndex = 0;
+
         if (obstacle.type == Obstacle::Type::Horizontal)
         {
             if (velocity.y == 0.0f)
@@ -54,7 +60,7 @@ float Character::collisions(float deltaTime)
             }
 
             // X overlap check
-            if (!collisionAxisCheck(charX1, charX2, obstacle))
+            if (!collisionAxisCheck(charX1, charX2, obstacle, segmentIndex))
             {
                 continue;
             }
@@ -64,7 +70,8 @@ float Character::collisions(float deltaTime)
             if (t >= 0.0f && t <= deltaTime && t < minimalTimeUntilCollision)
             {
                 minimalTimeUntilCollision = t;
-                isClosestObstacleHorizontal = true;
+                closestObstacle = &obstacle;
+                closestSegmentIndex = segmentIndex;
             }
         }
         else
@@ -75,7 +82,7 @@ float Character::collisions(float deltaTime)
             }
 
             // Y overlap check
-            if (!collisionAxisCheck(charY1, charY2, obstacle))
+            if (!collisionAxisCheck(charY1, charY2, obstacle, segmentIndex))
             {
                 continue;
             }
@@ -85,12 +92,13 @@ float Character::collisions(float deltaTime)
             if (t >= 0.0f && t <= deltaTime && t < minimalTimeUntilCollision)
             {
                 minimalTimeUntilCollision = t;
-                isClosestObstacleHorizontal = false;
+                closestObstacle = &obstacle;
+                closestSegmentIndex = segmentIndex;
             }
         }
     }
 
-    if (minimalTimeUntilCollision > 999.0f)
+    if (closestObstacle == nullptr)
     {
         // No collision within deltaTime
         position += velocity * deltaTime;
@@ -100,16 +108,19 @@ float Character::collisions(float deltaTime)
     {
         // Collision detected
         position += velocity * minimalTimeUntilCollision;
-        if (isClosestObstacleHorizontal)
+        if (closestObstacle->type == Obstacle::Type::Horizontal)
         {
             float elasticity = signVelY > 0.0f ? data.collisionElasticityRoof : data.collisionElasticityFloor;
             velocity.y *= -elasticity;
-            isGrounded = signVelY < 0.0f;
+            groundedData.isGrounded = signVelY < 0.0f;
         }
         else
         {
             velocity.x *= -data.collisionElasticitySides;
+            groundedData.isGrounded = false;
         }
+        groundedData.segmentIndex = closestSegmentIndex;
+
         return deltaTime - minimalTimeUntilCollision; // Remaining time to process
     }
 }
@@ -127,7 +138,7 @@ Character::~Character()
 
 void Character::update(float deltaTime)
 {
-    isGrounded = false;
+    groundedData.isGrounded = false;
     isMovingPurposefully = false;
 
     // If dragged by user -> stop physics
@@ -151,7 +162,7 @@ void Character::update(float deltaTime)
     }
 
     // Follow target
-    if (isGrounded && fabsf(velocity.x) <= data.maxSpeed)
+    if (groundedData.isGrounded && fabsf(velocity.x) <= data.maxSpeed)
     {
         followTarget(deltaTime);
     }
@@ -159,7 +170,7 @@ void Character::update(float deltaTime)
     if (!isMovingPurposefully)
     {
         // Friction with floor
-        if (isGrounded)
+        if (groundedData.isGrounded)
         {
             const float signVelX = copysignf(1.0f, velocity.x);
             float frictionImpulse = data.frictionFloor;

@@ -32,6 +32,14 @@ public:
         bool exist = false;
         Vec2 position;
     };
+
+    struct GroundedData
+    {
+        bool isGrounded = false;
+        
+        const Obstacle* obstacle = nullptr;
+        size_t segmentIndex = 0;
+    };
 private:
     Vec2 position;
     Vec2 size;
@@ -41,10 +49,11 @@ private:
     Data data;
     FollowTarget targetToFollow;
 
-    bool isGrounded = false;
+    GroundedData groundedData;
+
     bool isMovingPurposefully = false;
 
-    bool collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle) const;
+    bool collisionAxisCheck(float axisMin, float axisMax, const Obstacle& obstacle, size_t& returnSegmentIndex) const;
     float collisions(float deltaTime);
 public:
     static Vec2 worldSize; // Center is at zero

@@ -11,5 +11,6 @@ struct AABB
 
 	bool isIntersecting(const AABB& other) const;
 	bool isContaining(const Vec2& point) const;
+	bool isContaining(const AABB& inner) const;
 };
 

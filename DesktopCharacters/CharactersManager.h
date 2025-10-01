@@ -15,6 +15,9 @@ struct InGameWindowData
     WindowData data;
     Vec2 velocity;
     Vec2 lastPosition;
+
+    AABB aabb;
+    bool occluded = false;
 };
 
 class CharactersManager
@@ -57,7 +60,7 @@ private:
     const float dragHistoryDuration = 0.1f; // track last 0.1 seconds for velocity
 private:
     void collectWindowsData(float deltaTime);
-    void removeContainedWindows();
+    void occludeInGameWindows();
 
     void update(float deltaTime);
     void updateObstacles();
